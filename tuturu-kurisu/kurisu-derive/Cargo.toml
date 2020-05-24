@@ -1,0 +1,16 @@
+[package]
+name = "kurisu-derive"
+version = "0.1.0"
+authors = ["Philippe Guilbault <pguilbault@smartnewb.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = {version = "1", features = ["extra-traits", "derive", "parsing"]}
+proc-macro2 = "1.0.10"
+quote = "1"
+proc-macro-error = "1"
+toml = "0.5"
+

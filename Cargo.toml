@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+#    "tuturu-okabe", # Binary patcher / updater
+#    "tuturu-itaru", # Console Lib
+    "tuturu-kurisu", # Arg parser
+    "tuturu", # Example Project
+]
