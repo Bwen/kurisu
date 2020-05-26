@@ -5,7 +5,11 @@ authors = ["Philippe Guilbault <pguilbault@smartnewb.com>"]
 edition = "2018"
 license = "MIT / Unlicense"
 categories = ["command-line-interface"]
-keywords = ["console", "terminal", "arg", "argument", "cli", "parse", "flag", "options"]
+keywords = ["console", "terminal", "arg", "argument", "cli", "parse", "flag", "options", "annotation"]
+description = "Derive macro helper to parse command line arguments"
+
+[lib]
+bench = false
 
 [dependencies]
 kurisu-derive = { path = "kurisu-derive" }
@@ -20,3 +24,16 @@ default = []
 #prompt = ["console"]
 color = ["termcolor", "atty"]
 i18n = ["gettext-macros"]
+
+[dev-dependencies]
+criterion = "0.3"
+toml ="0.5"
+
+[profile.bench]
+lto = true
+codegen-units = 1
+
+[[bench]]
+harness = false
+name = "01_from_args"
+path = "benches/01_from_args.rs"

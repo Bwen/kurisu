@@ -5,7 +5,7 @@ use tuturu_kurisu::*;
 /// some helpful text, tuturu ♫
 /// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫
 /// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫
-#[kurisu(cargo)]
+#[kurisu]
 struct Yargs {
     #[kurisu(long = "very-long-option")]
     /// This is to test long documentation problem that could occur at any time...
@@ -26,7 +26,7 @@ pub fn my_func() -> i32 {
 }
 
 fn main() {
-    let args = Yargs::from_args();
+    let args = Yargs::from_args(std::env::args().skip(1).collect());
     let error = mayuri::validate_usage(&args);
     mayuri::usage_error(&args, error);
 

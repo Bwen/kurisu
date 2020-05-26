@@ -9,7 +9,7 @@ pub enum ArgError {
 
 pub fn usage_error<'a, T: Kurisu<'a>>(_kurisu_struct: &T, arg_error: Option<ArgError>) {
     if let Some(error) = arg_error {
-        let info = T::get_info_instance().lock().unwrap();
+        let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
         let exit_code = match error {
             ArgError::NoArgs => print_usage(&info),
             ArgError::Invalid(arg) => print_invalid_arg(arg),
@@ -44,7 +44,7 @@ pub fn print_usage(info: &Info) -> i32 {
 }
 
 pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<ArgError> {
-    let info = T::get_info_instance().lock().unwrap();
+    let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
 
     if info.env_args.is_empty() && !info.allow_noargs {
         return Some(ArgError::NoArgs);
@@ -64,7 +64,7 @@ pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<ArgError>
 
     // TODO: Add a "required_if" annotation to add relationship between args...
     for arg in info.args.iter().filter(|a| a.value_required()) {
-        if arg.provided {
+        if arg.occurrences > 0 {
             return Some(ArgError::RequiresValue(arg.clone()));
         }
     }

@@ -168,6 +168,37 @@ fn long_flag_with_dashes() {
     assert_eq!(norm_args, expected);
 }
 
+// When we pass -t "This is a long string value" we get the following from std:env:args()
+// Args {
+//     inner: [
+//         "target/debug/main",
+//         "-t",
+//         "This is a long string value",
+//     ],
+// }
+#[test]
+fn string_value_double_quoted() {
+    let kurisu_args = vec![
+        Arg {
+            name: "test",
+            value_type: "String",
+            long: Some("test"),
+            ..Default::default()
+        },
+        Arg {
+            name: "short",
+            value_type: "String",
+            short: Some("s"),
+            ..Default::default()
+        },
+    ];
+
+    let args = vec_to_string(vec!["--test", "This is a long string value", "-s", "This is a short string value"]);
+    let expected = vec_to_string(vec!["--test=This is a long string value", "-s=This is a short string value"]);
+    let norm_args = normalize_env_args(&args, &kurisu_args);
+    assert_eq!(norm_args, expected);
+}
+
 #[test]
 fn multiple_values() {
     let kurisu_args = vec![

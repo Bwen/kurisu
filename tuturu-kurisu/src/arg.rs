@@ -12,8 +12,8 @@ pub struct Arg<'a> {
     pub long: Option<&'a str>,
     pub exit: Option<fn() -> i32>,
     pub default: &'a str,
-    pub value: String,
-    pub provided: bool,
+    pub value: Vec<String>,
+    pub occurrences: usize,
 }
 
 impl<'a> Default for Arg<'a> {
@@ -27,8 +27,8 @@ impl<'a> Default for Arg<'a> {
             long: None,
             exit: None,
             default: "",
-            value: String::new(),
-            provided: false,
+            value: Vec::new(),
+            occurrences: 0,
         }
     }
 }
@@ -117,25 +117,38 @@ impl<'a> Arg<'a> {
         TYPES_MULTIPLE_VALUES.contains(&self.value_type)
     }
 
-    pub fn set_value(&'_ mut self, args: &Vec<String>) {
-        // TODO: Need to parse args that accepts multiple values into a Vec
+    pub fn set_value(&'_ mut self, args: &[String]) {
         // TODO: What to do with Optional values?
-        // TODO: Handle repetitive short flags such as -vvv
-        // TODO: Handle positional args?
+        // TODO: Handle repetitive short flags such as -vvv (Occurrences)
 
+        let mut pos = 1;
         for arg in args {
             if self.eq(arg) {
                 if arg.contains('=') {
                     let value: Vec<&str> = arg.split('=').collect();
-                    self.provided = true;
-                    self.value = value[1].to_owned();
-                    return;
+                    self.occurrences += 1;
+                    self.value.push(value[1].to_owned());
+                    continue;
                 }
 
-                self.provided = true;
-                self.value = String::from("true");
-                return;
+                self.occurrences += 1;
+                self.value.push(String::from("true"));
+            } else if !arg.starts_with('-') {
+                if let Some(position) = self.position {
+                    if position != pos && position != 0 {
+                        pos += 1;
+                        continue;
+                    }
+
+                    self.occurrences += 1;
+                    self.value.push(arg.clone());
+                    pos += 1;
+                }
             }
+        }
+
+        if !self.value.is_empty() {
+            return;
         }
 
         // TODO: Fall back to check environment variables with the same name capitalized,
@@ -143,6 +156,6 @@ impl<'a> Arg<'a> {
         // Or... Should it? field mysql_host for example would allow a quick access to environment variables that dont require branding...
         // Optional branding annotation?
 
-        self.value = self.default.to_string();
+        self.value.push(self.default.to_string());
     }
 }

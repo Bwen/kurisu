@@ -9,13 +9,14 @@ pub use exit_code::*;
 pub use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 
+use crate::arg_parser::VALUE_SEPARATOR;
 #[doc(hidden)]
 pub use kurisu_derive::*;
 
 /// Hello there... Tuturuuuu ♫
 pub trait Kurisu<'a> {
-    fn from_args() -> Self;
-    fn get_info_instance() -> &'static Mutex<Info<'static>>;
+    fn from_args(env_args: Vec<String>) -> Self;
+    fn get_info_instance(env_args: Vec<String>) -> &'static Mutex<Info<'static>>;
 }
 
 #[derive(Debug)]
@@ -32,11 +33,11 @@ pub fn exit_args(info: &Info<'static>) {
     let exit_args: Vec<&Arg<'_>> = info
         .args
         .iter()
-        .filter(|a| a.exit.is_some() || a.name == "usage" || a.name == "version")
+        .filter(|a| a.exit.is_some() || ["usage", "version"].contains(&a.name))
         .collect();
 
     for arg in exit_args {
-        if !arg.provided {
+        if arg.occurrences == 0 {
             continue;
         }
 
@@ -53,12 +54,12 @@ pub fn exit_args(info: &Info<'static>) {
 }
 
 pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<String> {
-    // TODO: Rename feature, like camelCase?
     let mut env_vars: Vec<String> = vec![];
     let mut previous_flag: String = String::from("");
     for arg in args {
         let mut arguments: Vec<String> = vec![arg.clone()];
-        if arg.starts_with('-') && !arg.contains('=') && !arg.starts_with("--") && arg.len() > 2 {
+        // Stacking short flags & Check if this is a negative number
+        if arg.starts_with('-') && arg.parse::<isize>().is_err() && !arg.contains('=') && !arg.starts_with("--") && arg.len() > 2 {
             arguments = arg.chars().skip(1).map(|a| format!("-{}", a)).collect()
         }
 
@@ -70,18 +71,22 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
             }
 
             if arg.starts_with('-') || arg.starts_with("--") {
-                if !previous_flag.is_empty() {
-                    env_vars.push(previous_flag.clone());
-                    previous_flag = String::from("");
-                }
+                // Check if this is a negative number
+                if arg.parse::<isize>().is_err() {
+                    // Two flags following each other
+                    if !previous_flag.is_empty() {
+                        env_vars.push(previous_flag.clone());
+                        previous_flag = String::from("");
+                    }
 
-                if karg.unwrap().value_none() || arg.contains('=') {
-                    env_vars.push(arg.clone());
+                    if karg.is_some() && karg.unwrap().value_none() || arg.contains('=') {
+                        env_vars.push(arg.clone());
+                        continue;
+                    }
+
+                    previous_flag = arg.clone();
                     continue;
                 }
-
-                previous_flag = arg.clone();
-                continue;
             }
 
             env_vars.push(format!("{}={}", previous_flag, arg));
@@ -96,9 +101,9 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
     env_vars
 }
 
-// TODO: Refactor function to take Info only
 pub fn parse_value<P: ArgParser>(name: &str, info: &Info) -> P {
     // TODO: user parsing if arg type is `fn()` how to call its function, kurisu doc should specify which function to call...
     let arg = info.args.iter().find(|a| name == a.name).unwrap();
-    P::parse(arg.value.as_str())
+    let value = arg.value.join(VALUE_SEPARATOR);
+    P::parse(value.as_str())
 }
