@@ -1,8 +1,8 @@
-extern crate tuturu_kurisu;
+extern crate kurisu;
 
+use kurisu::*;
 use std::fs;
 use toml::Value;
-use tuturu_kurisu::*;
 
 #[test]
 fn struct_info_annotation() {

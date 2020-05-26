@@ -1,7 +1,7 @@
-extern crate tuturu_kurisu;
+extern crate kurisu;
 
-use tuturu_kurisu::Arg;
-use tuturu_kurisu::*;
+use kurisu::Arg;
+use kurisu::*;
 
 fn vec_to_string(args: Vec<&str>) -> Vec<String> {
     let mut strings = vec![];

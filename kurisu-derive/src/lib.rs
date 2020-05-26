@@ -230,7 +230,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         }
 
         quote! {
-            ::tuturu_kurisu::Arg {
+            ::kurisu::Arg {
                 name: stringify!(#name),
                 value_type: stringify!(#ty),
                 position: #input_position,
@@ -247,25 +247,25 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
 
     let struct_values = fields.named.iter().map(|f| {
         let name = &f.ident.clone().unwrap();
-        quote! { #name: ::tuturu_kurisu::parse_value(stringify!(#name), &info), }
+        quote! { #name: ::kurisu::parse_value(stringify!(#name), &info), }
     });
 
     let gen = quote! {
-        impl<'a> ::tuturu_kurisu::Kurisu<'a> for #name {
+        impl<'a> ::kurisu::Kurisu<'a> for #name {
             fn from_args(env_args: Vec<String>) -> #name {
                 let mutex = Self::get_info_instance(env_args);
                 let info = mutex.lock().unwrap();
-                ::tuturu_kurisu::exit_args(&info);
+                ::kurisu::exit_args(&info);
                 #name {
                     #(#struct_values)*
                 }
             }
 
-            fn get_info_instance(env_args: Vec<String>) -> &'static std::sync::Mutex<::tuturu_kurisu::Info<'static>> {
-                static INSTANCE: ::tuturu_kurisu::OnceCell<std::sync::Mutex<::tuturu_kurisu::Info>> = ::tuturu_kurisu::OnceCell::new();
+            fn get_info_instance(env_args: Vec<String>) -> &'static std::sync::Mutex<::kurisu::Info<'static>> {
+                static INSTANCE: ::kurisu::OnceCell<std::sync::Mutex<::kurisu::Info>> = ::kurisu::OnceCell::new();
                 INSTANCE.get_or_init(move || {
                     let mut kurisu_args = vec![
-                        ::tuturu_kurisu::Arg {
+                        ::kurisu::Arg {
                             name: "usage",
                             value_type: "bool",
                             position: None,
@@ -277,7 +277,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             value: Vec::new(),
                             occurrences: 0,
                         },
-                        ::tuturu_kurisu::Arg {
+                        ::kurisu::Arg {
                             name: "version",
                             value_type: "bool",
                             position: None,
@@ -292,7 +292,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                         #(#args_array),*
                     ];
 
-                    let env_args = ::tuturu_kurisu::normalize_env_args(&env_args, &kurisu_args);
+                    let env_args = ::kurisu::normalize_env_args(&env_args, &kurisu_args);
                     for arg in kurisu_args.iter_mut() {
                         arg.set_value(&env_args);
                     }

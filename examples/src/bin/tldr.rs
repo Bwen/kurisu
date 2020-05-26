@@ -1,5 +1,5 @@
 // use std::path::PathBuf;
-use tuturu_kurisu::*;
+use kurisu::*;
 
 #[derive(Debug, Kurisu)]
 /// some helpful text, tuturu ♫

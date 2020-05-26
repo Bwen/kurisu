@@ -301,6 +301,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kurisu"
+version = "0.1.0"
+dependencies = [
+ "atty",
+ "criterion",
+ "gettext-macros",
+ "kurisu-derive",
+ "once_cell",
+ "termcolor",
+ "textwrap",
+ "toml",
+]
+
+[[package]]
 name = "kurisu-derive"
 version = "0.1.0"
 dependencies = [
@@ -633,21 +647,7 @@ dependencies = [
 name = "tuturu"
 version = "0.1.0"
 dependencies = [
- "tuturu-kurisu",
-]
-
-[[package]]
-name = "tuturu-kurisu"
-version = "0.1.0"
-dependencies = [
- "atty",
- "criterion",
- "gettext-macros",
- "kurisu-derive",
- "once_cell",
- "termcolor",
- "textwrap",
- "toml",
+ "kurisu",
 ]
 
 [[package]]

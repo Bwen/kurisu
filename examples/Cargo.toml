@@ -5,4 +5,4 @@ authors = ["Philippe Guilbault <pguilbault@smartnewb.com>"]
 edition = "2018"
 
 [dependencies]
-tuturu-kurisu = {path = "../tuturu-kurisu"}
+kurisu = {path = "../"}

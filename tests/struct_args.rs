@@ -1,8 +1,8 @@
-extern crate tuturu_kurisu;
+extern crate kurisu;
 
+use kurisu::*;
 use std::path::PathBuf;
 use std::str::FromStr;
-use tuturu_kurisu::*;
 
 fn vec_to_string(args: Vec<&str>) -> Vec<String> {
     let mut strings = vec![];
