@@ -1,17 +1,20 @@
-pub(crate) const VALUE_SEPARATOR: &str = "(_(__)===D";
+pub const VALUE_SEPARATOR: &str = "(_(__)===D";
 
 use std::path::PathBuf;
-pub trait ArgParser {
+
+pub trait Parser {
     fn parse(value: &str) -> Self;
 }
 
-impl ArgParser for String {
+// TODO: Implement parser for IpAddr v4&v6? HashMap? O.o  what else?
+
+impl Parser for String {
     fn parse(value: &str) -> Self {
         value.to_string()
     }
 }
 
-impl ArgParser for Vec<String> {
+impl Parser for Vec<String> {
     fn parse(value: &str) -> Self {
         if value.is_empty() {
             return Vec::new();
@@ -21,7 +24,7 @@ impl ArgParser for Vec<String> {
     }
 }
 
-impl ArgParser for Option<String> {
+impl Parser for Option<String> {
     fn parse(value: &str) -> Self {
         if value.is_empty() || value.eq("None") {
             return None;
@@ -31,19 +34,19 @@ impl ArgParser for Option<String> {
     }
 }
 
-impl ArgParser for bool {
+impl Parser for bool {
     fn parse(value: &str) -> Self {
         value.parse::<bool>().unwrap_or_default()
     }
 }
 
-impl ArgParser for usize {
+impl Parser for usize {
     fn parse(value: &str) -> Self {
         value.parse::<usize>().unwrap_or_default()
     }
 }
 
-impl ArgParser for Vec<usize> {
+impl Parser for Vec<usize> {
     fn parse(value: &str) -> Self {
         if value.is_empty() {
             return Vec::new();
@@ -53,13 +56,13 @@ impl ArgParser for Vec<usize> {
     }
 }
 
-impl ArgParser for isize {
+impl Parser for isize {
     fn parse(value: &str) -> Self {
         value.parse::<isize>().unwrap_or_default()
     }
 }
 
-impl ArgParser for Vec<isize> {
+impl Parser for Vec<isize> {
     fn parse(value: &str) -> Self {
         if value.is_empty() {
             return Vec::new();
@@ -69,7 +72,7 @@ impl ArgParser for Vec<isize> {
     }
 }
 
-impl ArgParser for PathBuf {
+impl Parser for PathBuf {
     fn parse(value: &str) -> Self {
         if value.is_empty() {
             return PathBuf::default();
@@ -79,7 +82,7 @@ impl ArgParser for PathBuf {
     }
 }
 
-impl ArgParser for Vec<PathBuf> {
+impl Parser for Vec<PathBuf> {
     fn parse(value: &str) -> Self {
         if value.is_empty() {
             return Vec::new();
@@ -98,7 +101,7 @@ impl ArgParser for Vec<PathBuf> {
     }
 }
 
-impl ArgParser for Option<PathBuf> {
+impl Parser for Option<PathBuf> {
     fn parse(value: &str) -> Self {
         if value.is_empty() || value.eq("None") {
             return None;

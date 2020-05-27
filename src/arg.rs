@@ -1,3 +1,11 @@
+mod error;
+mod parser;
+mod validator;
+
+pub use error::Error;
+pub use parser::{Parser, VALUE_SEPARATOR};
+pub use validator::Validator;
+
 const TYPES_NO_VALUE: &[&str] = &["bool"];
 const TYPES_OPTIONAL_VALUE: &[&str] = &["Option < String >", "Option < usize >", "Option < isize >"];
 

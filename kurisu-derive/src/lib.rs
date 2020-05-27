@@ -191,6 +191,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
             field_short = quote! {None};
             field_long = quote! {None};
 
+            // TODO: Add check to prevent more than one infinite args field
             // If its empty it means we got #[kurisu(pos)] without any value, thus infinite positional arguments
             if position.is_empty() {
                 input_position = quote! {Some (0)};
@@ -233,6 +234,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         }
     });
 
+    // TODO: Implement the possibility to skip a struct field by prefixing it with _, Should not generate an Arg and should set default value to struct
     let struct_values = fields.named.iter().map(|f| {
         let name = &f.ident.clone().unwrap();
         quote! { #name: ::kurisu::parse_value(stringify!(#name), &info), }

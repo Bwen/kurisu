@@ -1,15 +1,14 @@
-mod arg;
-mod arg_parser;
+pub mod arg;
 mod exit_code;
 pub mod mayuri;
 
 pub use arg::Arg;
-pub use arg_parser::ArgParser;
+use arg::{Parser, VALUE_SEPARATOR};
 pub use exit_code::*;
 pub use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 
-use crate::arg_parser::VALUE_SEPARATOR;
+use crate::arg::Error;
 #[doc(hidden)]
 pub use kurisu_derive::*;
 
@@ -104,9 +103,41 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
     env_vars
 }
 
-pub fn parse_value<P: ArgParser>(name: &str, info: &Info) -> P {
+pub fn parse_value<P: Parser>(name: &str, info: &Info) -> P {
     // TODO: user parsing if arg type is `fn()` how to call its function, kurisu doc should specify which function to call...
     let arg = info.args.iter().find(|a| name == a.name).unwrap();
     let value = arg.value.join(VALUE_SEPARATOR);
     P::parse(value.as_str())
+}
+
+pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<Error> {
+    let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
+
+    if info.env_args.is_empty() && !info.allow_noargs {
+        return Some(Error::NoArgs);
+    }
+
+    // TODO: Check for conflicting flags, add annotation to denote relationship? --debug & --no-debug
+
+    // TODO: Possible values with an enum or vec...?
+    // TODO: Positional arguments?
+    // Always validate invalid flags first
+    for arg in info.env_args.as_slice() {
+        if !arg.starts_with('-') {
+            continue;
+        }
+
+        if !info.args.iter().any(|a| &a == arg) {
+            return Some(Error::Invalid(arg.clone()));
+        }
+    }
+
+    // TODO: Add a "required_if" annotation to add relationship between args...
+    for arg in info.args.iter().filter(|a| a.is_value_required()) {
+        if arg.occurrences > 0 {
+            return Some(Error::RequiresValue(arg.clone()));
+        }
+    }
+
+    None
 }
