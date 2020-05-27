@@ -3,7 +3,7 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use proc_macro_error::abort_call_site;
 // TODO: Apply Macro hygiene as much as possible with quote_spanned
-use quote::{quote, quote_spanned};
+use quote::quote;
 use syn::spanned::Spanned;
 use syn::{Attribute, Field, NestedMeta};
 
@@ -152,28 +152,16 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         // CARGO_PKG_AUTHORS, CARGO_PKG_HOMEPAGE
         // println!("{:#?}", std::env::vars().collect::<std::collections::HashMap<String, String>>());
         let cargo_name = std::env::var("CARGO_PKG_NAME");
-        if cargo_name.is_err() {
-            panic!("Could not find environment variable CARGO_PKG_NAME");
-        }
-
         if let Ok(name) = cargo_name {
             script_name = quote! { Some (#name) };
         }
 
         let cargo_version = std::env::var("CARGO_PKG_VERSION");
-        if cargo_version.is_err() {
-            panic!("Could not find environment variable CARGO_PKG_VERSION");
-        }
-
         if let Ok(version) = cargo_version {
             script_version = quote! { Some (#version) };
         }
 
         let cargo_description = std::env::var("CARGO_PKG_DESCRIPTION");
-        if cargo_description.is_err() {
-            panic!("Could not find environment variable CARGO_PKG_DESCRIPTION");
-        }
-
         if let Ok(doc) = cargo_description {
             script_doc = quote! { Some (#doc) };
         }
@@ -292,9 +280,15 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                         #(#args_array),*
                     ];
 
-                    let env_args = ::kurisu::normalize_env_args(&env_args, &kurisu_args);
+                    let mut env_args = ::kurisu::normalize_env_args(&env_args, &kurisu_args);
+                    let positions: Vec<i8> = kurisu_args
+                        .iter()
+                        .filter(|a| a.position.is_some() && a.position.unwrap() != 0)
+                        .map(|a| a.position.unwrap())
+                        .collect();
+
                     for arg in kurisu_args.iter_mut() {
-                        arg.set_value(&env_args);
+                        arg.set_value(&mut env_args, &positions);
                     }
 
                     std::sync::Mutex::new(Info {

@@ -4,7 +4,7 @@ mod exit_code;
 pub mod mayuri;
 
 pub use arg::Arg;
-use arg_parser::ArgParser;
+pub use arg_parser::ArgParser;
 pub use exit_code::*;
 pub use once_cell::sync::OnceCell;
 use std::sync::Mutex;
@@ -56,10 +56,15 @@ pub fn exit_args(info: &Info<'static>) {
 pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<String> {
     let mut env_vars: Vec<String> = vec![];
     let mut previous_flag: String = String::from("");
+    let mut options_ended = false;
     for arg in args {
+        if arg.len() == 2 && arg == "--" {
+            options_ended = true;
+        }
+
         let mut arguments: Vec<String> = vec![arg.clone()];
-        // Stacking short flags & Check if this is a negative number
-        if arg.starts_with('-') && arg.parse::<isize>().is_err() && !arg.contains('=') && !arg.starts_with("--") && arg.len() > 2 {
+        // Stacking short flags, check if this is a negative number
+        if !options_ended && arg.starts_with('-') && arg.parse::<isize>().is_err() && !arg.contains('=') && !arg.starts_with("--") && arg.len() > 2 {
             arguments = arg.chars().skip(1).map(|a| format!("-{}", a)).collect()
         }
 
@@ -70,23 +75,21 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
                 continue;
             }
 
-            if arg.starts_with('-') || arg.starts_with("--") {
-                // Check if this is a negative number
-                if arg.parse::<isize>().is_err() {
-                    // Two flags following each other
-                    if !previous_flag.is_empty() {
-                        env_vars.push(previous_flag.clone());
-                        previous_flag = String::from("");
-                    }
+            // Check if this is a negative number
+            if arg.parse::<isize>().is_err() && arg.len() > 1 && (arg.starts_with('-') || arg.starts_with("--")) {
+                // Two flags following each other
+                if !previous_flag.is_empty() {
+                    env_vars.push(previous_flag.clone());
+                    previous_flag = String::from("");
+                }
 
-                    if karg.is_some() && karg.unwrap().value_none() || arg.contains('=') {
-                        env_vars.push(arg.clone());
-                        continue;
-                    }
-
-                    previous_flag = arg.clone();
+                if karg.is_some() && karg.unwrap().is_value_none() || arg.contains('=') {
+                    env_vars.push(arg.clone());
                     continue;
                 }
+
+                previous_flag = arg.clone();
+                continue;
             }
 
             env_vars.push(format!("{}={}", previous_flag, arg));

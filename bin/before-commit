@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cargo test --all-features --no-fail-fast
+cargo test --no-fail-fast
 cargo check
 cargo fmt --all
-cargo clippy --all-features --all-targets
+cargo clippy --all-targets

@@ -200,6 +200,29 @@ fn string_value_double_quoted() {
 }
 
 #[test]
+fn empty_value_double_quoted() {
+    let kurisu_args = vec![
+        Arg {
+            name: "test",
+            value_type: "String",
+            long: Some("test"),
+            ..Default::default()
+        },
+        Arg {
+            name: "short",
+            value_type: "String",
+            short: Some("s"),
+            ..Default::default()
+        },
+    ];
+
+    let args = vec_to_string(vec!["--test", "", "-s", ""]);
+    let expected = vec_to_string(vec!["--test=", "-s="]);
+    let norm_args = normalize_env_args(&args, &kurisu_args);
+    assert_eq!(norm_args, expected);
+}
+
+#[test]
 fn multiple_values() {
     let kurisu_args = vec![
         Arg {
@@ -233,6 +256,52 @@ fn required_value_without_value() {
 
     let args = vec_to_string(vec!["-a=test1", "-a", "test2", "-a", "-a", "test3"]);
     let expected = vec_to_string(vec!["-a=test1", "-a=test2", "-a", "-a=test3"]);
+    let norm_args = normalize_env_args(&args, &kurisu_args);
+    assert_eq!(norm_args, expected);
+}
+
+#[test]
+fn positional_value_dash_only() {
+    let kurisu_args = vec![Arg {
+        name: "dash",
+        value_type: "String",
+        short: Some("d"),
+        ..Default::default()
+    }];
+
+    let args = vec_to_string(vec!["-"]);
+    let expected = vec_to_string(vec!["-"]);
+    let norm_args = normalize_env_args(&args, &kurisu_args);
+    assert_eq!(norm_args, expected);
+}
+
+#[test]
+fn only_positional_values_follow() {
+    let kurisu_args = vec![
+        Arg {
+            name: "test1",
+            value_type: "Vec < String >",
+            short: Some("a"),
+            position: Some(0),
+            ..Default::default()
+        },
+        Arg {
+            name: "test2",
+            value_type: "String",
+            short: Some("b"),
+            position: Some(2),
+            ..Default::default()
+        },
+        Arg {
+            name: "test3",
+            value_type: "bool",
+            short: Some("c"),
+            ..Default::default()
+        },
+    ];
+
+    let args = vec_to_string(vec!["-c", "--", "-a", "-b", "test", "-d"]);
+    let expected = vec_to_string(vec!["-c", "--", "-a", "-b=test", "-d"]);
     let norm_args = normalize_env_args(&args, &kurisu_args);
     assert_eq!(norm_args, expected);
 }

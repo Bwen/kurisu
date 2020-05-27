@@ -50,6 +50,7 @@ pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<ArgError>
         return Some(ArgError::NoArgs);
     }
 
+    // TODO: Possible values with an enum or vec...?
     // TODO: Positional arguments?
     // Always validate invalid flags first
     for arg in info.env_args.as_slice() {
@@ -63,7 +64,7 @@ pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<ArgError>
     }
 
     // TODO: Add a "required_if" annotation to add relationship between args...
-    for arg in info.args.iter().filter(|a| a.value_required()) {
+    for arg in info.args.iter().filter(|a| a.is_value_required()) {
         if arg.occurrences > 0 {
             return Some(ArgError::RequiresValue(arg.clone()));
         }

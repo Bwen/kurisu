@@ -5,7 +5,7 @@ use std::fs;
 use toml::Value;
 
 #[test]
-fn struct_info_annotation() {
+fn annotation() {
     #[derive(Debug, Kurisu)]
     #[kurisu(name = "yargs", version = "1.0.0", doc = "some doc here")]
     struct Yargs {}
@@ -18,7 +18,7 @@ fn struct_info_annotation() {
 }
 
 #[test]
-fn struct_info_cargo() {
+fn cargo() {
     #[derive(Debug, Kurisu)]
     #[kurisu(cargo)]
     struct Yargs {}
@@ -34,7 +34,7 @@ fn struct_info_cargo() {
 }
 
 #[test]
-fn struct_info_doc() {
+fn doc() {
     #[derive(Debug, Kurisu)]
     /// line one
     /// line two
@@ -47,7 +47,7 @@ fn struct_info_doc() {
 }
 
 #[test]
-fn struct_info_none() {
+fn none() {
     #[derive(Debug, Kurisu)]
     struct Yargs {}
 
@@ -56,4 +56,15 @@ fn struct_info_none() {
     assert_eq!(info.name, None);
     assert_eq!(info.version, None);
     assert_eq!(info.doc, None);
+}
+
+#[test]
+fn noargs() {
+    #[derive(Debug, Kurisu)]
+    #[kurisu(noargs)]
+    struct Yargs {}
+
+    Yargs::from_args(vec![]);
+    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    assert_eq!(info.allow_noargs, true);
 }

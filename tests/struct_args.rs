@@ -14,7 +14,7 @@ fn vec_to_string(args: Vec<&str>) -> Vec<String> {
 }
 
 #[test]
-fn struct_args_builtins() {
+fn builtins() {
     #[derive(Debug, Kurisu)]
     struct Yargs {}
 
@@ -36,7 +36,7 @@ fn struct_args_builtins() {
 }
 
 #[test]
-fn struct_args_default_long() {
+fn default_long() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         #[kurisu(short, nolong)]
@@ -67,7 +67,7 @@ fn struct_args_default_long() {
 }
 
 #[test]
-fn struct_args_default_mandatory_values() {
+fn default_mandatory_values() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         string: String,
@@ -123,7 +123,7 @@ fn struct_args_default_mandatory_values() {
 }
 
 #[test]
-fn struct_args_values() {
+fn values() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         string: String,
@@ -150,7 +150,7 @@ fn struct_args_values() {
 }
 
 #[test]
-fn struct_args_positional() {
+fn positional() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         #[kurisu(pos = 2)]
@@ -165,7 +165,40 @@ fn struct_args_positional() {
 }
 
 #[test]
-fn struct_args_multiple_values() {
+fn positional_dash_only() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(pos)]
+        dash: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["-"]));
+    assert_eq!(yargs.dash, String::from("-"));
+}
+
+#[test]
+fn only_positional_values_follow() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        zero: bool,
+        one: bool,
+        #[kurisu(pos)]
+        test1: Vec<String>,
+        #[kurisu(pos = 2)]
+        test2: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec![
+        "--zero", "--", "-t1", "test2", "--test1", "--", "external", "-a", "--test",
+    ]));
+    assert_eq!(yargs.zero, true);
+    assert_eq!(yargs.one, false);
+    assert_eq!(yargs.test1, vec_to_string(vec!["-t1", "--test1", "--", "external", "-a", "--test"]));
+    assert_eq!(yargs.test2, String::from("test2"));
+}
+
+#[test]
+fn multiple_values() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         string: Vec<String>,
@@ -202,7 +235,7 @@ fn struct_args_multiple_values() {
 }
 
 #[test]
-fn struct_args_positional_infinite() {
+fn positional_infinite() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         #[kurisu(pos)]
@@ -219,18 +252,52 @@ fn struct_args_positional_infinite() {
         "/dir/file3.txt",
         "/dir/file4.txt",
         "/dir/file5.txt",
+        "/dir/file6.txt",
     ]));
 
     assert_eq!(yargs.second_file, String::from("/dir/file2.txt"));
     assert_eq!(yargs.fifth_file, String::from("/dir/file5.txt"));
     assert_eq!(
         yargs.files,
-        vec_to_string(vec![
-            "/dir/file1.txt",
-            "/dir/file2.txt",
-            "/dir/file3.txt",
-            "/dir/file4.txt",
-            "/dir/file5.txt",
-        ])
+        vec_to_string(vec!["/dir/file1.txt", "/dir/file3.txt", "/dir/file4.txt", "/dir/file6.txt",])
     );
+}
+
+#[test]
+fn positional_infinite_and_last() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(pos)]
+        files: Vec<String>,
+        #[kurisu(pos = -1)]
+        last: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec![
+        "/dir/file1.txt",
+        "/dir/file2.txt",
+        "/dir/file3.txt",
+        "/dir/file4.txt",
+        "/dir/file5.txt",
+    ]));
+
+    assert_eq!(yargs.last, String::from("/dir/file5.txt"));
+    assert_eq!(
+        yargs.files,
+        vec_to_string(vec!["/dir/file1.txt", "/dir/file2.txt", "/dir/file3.txt", "/dir/file4.txt",])
+    );
+}
+
+#[test]
+fn empty_value_double_quoted() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(short)]
+        short: String,
+        long: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["-s", "", "--long", ""]));
+    assert_eq!(yargs.short, String::from(""));
+    assert_eq!(yargs.long, String::from(""));
 }
