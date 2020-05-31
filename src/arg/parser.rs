@@ -6,7 +6,7 @@ pub trait Parser {
     fn parse(value: &str) -> Self;
 }
 
-// TODO: Implement parser for IpAddr v4&v6? HashMap? O.o  what else?
+// TODO: Implement parser for IpAddr v4&v6? HashMap? O.o  what else? Generic? ...
 
 impl Parser for String {
     fn parse(value: &str) -> Self {

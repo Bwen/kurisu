@@ -167,7 +167,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         }
     }
 
-    let mut script_noargs = meta_value("noargs", &struct_meta_attrs, false).unwrap_or(quote! {false});
+    let mut script_noargs = meta_value("allow_noargs", &struct_meta_attrs, false).unwrap_or(quote! {false});
     // If noargs is empty it means that the option exists with no value
     if script_noargs.is_empty() {
         script_noargs = quote! {true};

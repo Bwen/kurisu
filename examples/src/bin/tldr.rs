@@ -27,8 +27,7 @@ pub fn my_func() -> i32 {
 
 fn main() {
     let args = Yargs::from_args(std::env::args().skip(1).collect());
-    let error = kurisu::validate_usage(&args);
-    mayuri::usage_error(&args, error);
+    kurisu::valid_exit(args);
 
     println!("{:?}", args);
 }

@@ -4,6 +4,7 @@ use kurisu::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+// TODO: Centralize function or find a better way to do this
 fn vec_to_string(args: Vec<&str>) -> Vec<String> {
     let mut strings = vec![];
     for arg in args {
@@ -85,39 +86,47 @@ fn default_mandatory_values() {
     let arg = info.args.iter().find(|a| a.name == "version");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from("false"));
+    assert_eq!(arg.unwrap().occurrences, 0);
 
     let arg = info.args.iter().find(|a| a.name == "usage");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from("false"));
+    assert_eq!(arg.unwrap().occurrences, 0);
 
     let arg = info.args.iter().find(|a| a.name == "string");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from(""));
+    assert_eq!(arg.unwrap().occurrences, 0);
     assert_eq!(yargs.string, String::default());
 
     let arg = info.args.iter().find(|a| a.name == "path_buf");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from(""));
+    assert_eq!(arg.unwrap().occurrences, 0);
     assert_eq!(yargs.path_buf, PathBuf::from_str("").unwrap());
 
     let arg = info.args.iter().find(|a| a.name == "usize");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from(""));
+    assert_eq!(arg.unwrap().occurrences, 0);
     assert_eq!(yargs.usize, usize::default());
 
     let arg = info.args.iter().find(|a| a.name == "isize");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from(""));
+    assert_eq!(arg.unwrap().occurrences, 0);
     assert_eq!(yargs.isize, isize::default());
 
     let arg = info.args.iter().find(|a| a.name == "bool");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from(""));
+    assert_eq!(arg.unwrap().occurrences, 0);
     assert_eq!(yargs.bool, bool::default());
 
     let arg = info.args.iter().find(|a| a.name == "vec");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from(""));
+    assert_eq!(arg.unwrap().occurrences, 0);
     let default_vec: Vec<String> = Vec::new();
     assert_eq!(yargs.vec, default_vec);
 }
@@ -301,3 +310,5 @@ fn empty_value_double_quoted() {
     assert_eq!(yargs.short, String::from(""));
     assert_eq!(yargs.long, String::from(""));
 }
+
+// TODO: Test supported optional (Option<T>) values

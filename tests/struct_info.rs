@@ -61,7 +61,7 @@ fn none() {
 #[test]
 fn noargs() {
     #[derive(Debug, Kurisu)]
-    #[kurisu(noargs)]
+    #[kurisu(allow_noargs)]
     struct Yargs {}
 
     Yargs::from_args(vec![]);

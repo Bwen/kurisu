@@ -9,7 +9,7 @@ pub use validator::Validator;
 const TYPES_NO_VALUE: &[&str] = &["bool"];
 const TYPES_OPTIONAL_VALUE: &[&str] = &["Option < String >", "Option < usize >", "Option < isize >"];
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Arg<'a> {
     pub name: &'a str,
     pub value_type: &'a str,
@@ -108,7 +108,9 @@ impl<'a> Arg<'a> {
                 }
 
                 self.occurrences += 1;
-                self.value.push(String::from("true"));
+                if self.is_value_none() {
+                    self.value.push(String::from("true"));
+                }
             } else if options_ended || !arg.starts_with('-') || (arg.starts_with('-') && arg.len() == 1) {
                 if let Some(position) = self.position {
                     if position != pos && position != 0 && position != -1 {
@@ -144,6 +146,6 @@ impl<'a> Arg<'a> {
         // Or... Should it? field mysql_host for example would allow a quick access to environment variables that dont require branding...
         // Optional branding annotation?
 
-        self.value.push(self.default.to_string());
+        // self.value.push(self.default.to_string());
     }
 }

@@ -8,6 +8,8 @@ pub use exit_code::*;
 pub use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 
+// TODO: Simplify namespaces where we can (outside macro output)
+
 use crate::arg::Error;
 #[doc(hidden)]
 pub use kurisu_derive::*;
@@ -110,6 +112,11 @@ pub fn parse_value<P: Parser>(name: &str, info: &Info) -> P {
     P::parse(value.as_str())
 }
 
+pub fn valid_exit<'a, T: Kurisu<'a>>(_kurisu_struct: &T) {
+    let arg_error = validate_usage(_kurisu_struct);
+    mayuri::print_usage_error(_kurisu_struct, arg_error);
+}
+
 pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<Error> {
     let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
 
@@ -117,27 +124,34 @@ pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<Error> {
         return Some(Error::NoArgs);
     }
 
-    // TODO: Check for conflicting flags, add annotation to denote relationship? --debug & --no-debug
+    let positions: Vec<i8> = info.args.iter().filter(|a| a.position.is_some()).map(|a| a.position.unwrap()).collect();
 
-    // TODO: Possible values with an enum or vec...?
-    // TODO: Positional arguments?
-    // Always validate invalid flags first
+    // Always validate invalid options & args first
+    let mut pos: i8 = 0;
     for arg in info.env_args.as_slice() {
-        if !arg.starts_with('-') {
-            continue;
-        }
-
-        if !info.args.iter().any(|a| &a == arg) {
-            return Some(Error::Invalid(arg.clone()));
+        if arg.starts_with('-') {
+            if !info.args.iter().any(|a| &a == arg) {
+                return Some(Error::Invalid(arg.clone()));
+            }
+        } else {
+            pos += 1;
+            // If we have an infinite positional args we can never get an invalid pos
+            if !positions.contains(&0) && !positions.contains(&pos) {
+                return Some(Error::Invalid(arg.clone()));
+            }
         }
     }
 
+    // TODO: Validate arg type range, such as usize that cant be negative, etc...
     // TODO: Add a "required_if" annotation to add relationship between args...
     for arg in info.args.iter().filter(|a| a.is_value_required()) {
-        if arg.occurrences > 0 {
+        if arg.occurrences > 0 && arg.value.is_empty() {
             return Some(Error::RequiresValue(arg.clone()));
         }
     }
+
+    // TODO: Check for conflicting flags, add annotation to denote relationship? --debug & --no-debug
+    // TODO: Positional arguments?
 
     None
 }
