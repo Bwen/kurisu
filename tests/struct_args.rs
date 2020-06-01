@@ -414,3 +414,15 @@ fn not_occurrence() {
     let yargs = Yargs::from_args(vec_to_string(vec!["-t", "42"]));
     assert_eq!(yargs.test, 42);
 }
+
+#[test]
+fn short_flag_no_space_value() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(short, nolong)]
+        itest: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["-iC4"]));
+    assert_eq!(yargs.itest, String::from("C4"));
+}

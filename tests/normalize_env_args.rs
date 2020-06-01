@@ -341,3 +341,18 @@ fn only_positional_values_follow() {
     let norm_args = normalize_env_args(&args, &kurisu_args);
     assert_eq!(norm_args, expected);
 }
+
+#[test]
+fn short_flag_no_space_value() {
+    let kurisu_args = vec![Arg {
+        name: "test1",
+        value_type: "String",
+        short: Some("i"),
+        ..Default::default()
+    }];
+
+    let args = vec_to_string(vec!["-iC4"]);
+    let expected = vec_to_string(vec!["-i=C4"]);
+    let norm_args = normalize_env_args(&args, &kurisu_args);
+    assert_eq!(norm_args, expected);
+}

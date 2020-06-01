@@ -58,6 +58,7 @@ where
 }
 
 pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<String> {
+    let known_short_flags: Vec<&str> = kurisu_args.iter().filter_map(|a| a.short).collect();
     let mut env_vars: Vec<String> = Vec::new();
     let mut previous_flag: String = String::from("");
     let mut options_ended = false;
@@ -68,7 +69,7 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
 
         let mut arguments: Vec<String> = vec![arg.clone()];
 
-        // Stacking short flags, check if this is a negative number
+        // check if this is a negative number
         if !options_ended
             && arg.starts_with('-')
             && arg.len() > 2
@@ -77,7 +78,23 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
             && !arg.contains('=')
             && !arg.starts_with("--")
         {
-            arguments = arg.chars().skip(1).map(|a| format!("-{}", a)).collect()
+            arguments = Vec::new();
+            let mut unknown_flag = false;
+            let mut value = String::from("");
+            // Normalize short flag value with no spaces `-iVALUE` as well as stacking short flags
+            for short in arg.chars().skip(1) {
+                if !unknown_flag && known_short_flags.contains(&short.to_string().as_str()) {
+                    arguments.push(format!("-{}", short));
+                } else {
+                    unknown_flag = true;
+                    value.push(short);
+                }
+            }
+
+            if !value.is_empty() {
+                arguments.push(value);
+            }
+            //arguments = arg.chars().skip(1).map(|a| format!("-{}", a)).collect()
         }
 
         for arg in arguments {

@@ -83,7 +83,6 @@ impl<'a> Arg<'a> {
 
     pub fn set_value(&'_ mut self, args: &[String], positions: &[i8]) {
         // TODO: What to do with Optional values?
-        // TODO: short flags that are limited 1 char... can have a value in the same word... grep -iC4 file
 
         let mut pos = 1;
         let mut options_ended = false;
