@@ -4,7 +4,7 @@ use kurisu::Arg;
 use kurisu::*;
 
 fn vec_to_string(args: Vec<&str>) -> Vec<String> {
-    let mut strings = vec![];
+    let mut strings = Vec::new();
     for arg in args {
         strings.push(arg.to_string());
     }
@@ -241,6 +241,42 @@ fn multiple_values() {
 
     let args = vec_to_string(vec!["-m=test1", "-m", "test2", "--mul", "test3", "--mul=test4", "-m", "test5"]);
     let expected = vec_to_string(vec!["-m=test1", "-m=test2", "--mul=test3", "--mul=test4", "-m=test5"]);
+    let norm_args = normalize_env_args(&args, &kurisu_args);
+    assert_eq!(norm_args, expected);
+}
+
+#[test]
+fn multiple_comma_values() {
+    let kurisu_args = vec![
+        Arg {
+            name: "test1",
+            value_type: "Vec < String >",
+            long: Some("mul"),
+            ..Default::default()
+        },
+        Arg {
+            name: "test2",
+            value_type: "Vec < isize >",
+            short: Some("m"),
+            ..Default::default()
+        },
+    ];
+
+    let args = vec_to_string(vec!["-m=-1,-2", "-m", "3,-4", "--mul", "test1,test2", "--mul=test3,test4", "-m", "5,-6"]);
+
+    let expected = vec_to_string(vec![
+        "-m=-1",
+        "-m=-2",
+        "-m=3",
+        "-m=-4",
+        "--mul=test1",
+        "--mul=test2",
+        "--mul=test3",
+        "--mul=test4",
+        "-m=5",
+        "-m=-6",
+    ]);
+
     let norm_args = normalize_env_args(&args, &kurisu_args);
     assert_eq!(norm_args, expected);
 }

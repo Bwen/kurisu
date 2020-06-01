@@ -10,8 +10,8 @@ fn annotation() {
     #[kurisu(name = "yargs", version = "1.0.0", doc = "some doc here")]
     struct Yargs {}
 
-    Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(info.name, Some("yargs"));
     assert_eq!(info.version, Some("1.0.0"));
     assert_eq!(info.doc, Some("some doc here"));
@@ -23,8 +23,8 @@ fn cargo() {
     #[kurisu(cargo)]
     struct Yargs {}
 
-    Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     let cargo_string = fs::read_to_string("Cargo.toml").unwrap();
     let cargo_toml = cargo_string.parse::<Value>().unwrap();
 
@@ -41,8 +41,8 @@ fn doc() {
     /// line three
     struct Yargs {}
 
-    Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(info.doc, Some("line one line two line three"));
 }
 
@@ -51,8 +51,8 @@ fn none() {
     #[derive(Debug, Kurisu)]
     struct Yargs {}
 
-    Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(info.name, None);
     assert_eq!(info.version, None);
     assert_eq!(info.doc, None);
@@ -64,7 +64,7 @@ fn noargs() {
     #[kurisu(allow_noargs)]
     struct Yargs {}
 
-    Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(info.allow_noargs, true);
 }

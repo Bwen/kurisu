@@ -8,6 +8,7 @@ pub fn print_usage_error<'a, T: Kurisu<'a>>(_kurisu_struct: &T, arg_error: Optio
             Error::NoArgs => print_usage(&info),
             Error::Invalid(arg) => print_invalid_arg(arg),
             Error::RequiresValue(arg) => print_missing_value(arg),
+            Error::RequiresValueIf(a, b) => print_missing_value(a),
             Error::Custom(text) => print_custom_error(text),
             Error::CustomArg(arg, text) => print_custom_arg_error(arg, text),
         };
@@ -32,7 +33,7 @@ pub fn print_invalid_arg(arg: String) -> i32 {
 }
 
 pub fn print_missing_value(arg: Arg) -> i32 {
-    // TODO: Interestingly the arg has both short & long but only one was mention in the command line... which to refer to?
+    // TODO: Interestingly the arg has both short & long but only one was mentioned in the command line... which to refer to?
     println!("Missing value for {:?}", arg.name);
 
     ExitCode::USAGE.into()

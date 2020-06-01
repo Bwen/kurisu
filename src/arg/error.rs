@@ -7,4 +7,5 @@ pub enum Error {
     NoArgs,
     Invalid(String),
     RequiresValue(Arg<'static>),
+    RequiresValueIf(Arg<'static>, Arg<'static>),
 }

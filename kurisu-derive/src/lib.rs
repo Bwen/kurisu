@@ -24,8 +24,8 @@ fn get_fields_named(data: &syn::Data) -> &syn::FieldsNamed {
 }
 
 fn meta_attributes(attrs: &[Attribute]) -> Vec<(proc_macro2::Ident, Option<syn::Lit>)> {
-    let mut doc_lines: Vec<String> = vec![];
-    let mut attributes: Vec<(proc_macro2::Ident, Option<syn::Lit>)> = vec![];
+    let mut doc_lines: Vec<String> = Vec::new();
+    let mut attributes: Vec<(proc_macro2::Ident, Option<syn::Lit>)> = Vec::new();
     for attr in attrs.iter() {
         if attr.path.is_ident("doc") {
             if let Ok(meta) = attr.parse_meta() {
@@ -173,7 +173,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         script_noargs = quote! {true};
     }
 
-    let mut existing_shorts: Vec<String> = vec![String::from("v"), String::from("h")];
+    let mut existing_shorts: Vec<String> = vec![String::from("V"), String::from("h")];
     let mut existing_longs: Vec<String> = vec![String::from("version"), String::from("help")];
     let fields = get_fields_named(&ast.data);
     let args_array = fields.named.iter().map(|f| {
@@ -183,6 +183,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         let field_meta_attrs = meta_attributes(&f.attrs);
         let field_doc = meta_value("doc", &field_meta_attrs, true).unwrap_or(quote! {None});
         let field_default = meta_value("default", &field_meta_attrs, false).unwrap_or(quote! {""});
+        let required_if = meta_value("required_if", &field_meta_attrs, true).unwrap_or(quote! {None});
         let mut field_short = meta_value("short", &field_meta_attrs, true).unwrap_or(quote! {None});
         let mut field_long = meta_value("long", &field_meta_attrs, true).unwrap_or(quote! {});
         let field_input = meta_value("pos", &field_meta_attrs, false);
@@ -227,6 +228,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                 long: #field_long,
                 doc: #field_doc,
                 exit: #exit_cb,
+                required_if: #required_if,
                 default: #field_default,
                 value: Vec::new(),
                 occurrences: 0,
@@ -242,10 +244,9 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
 
     let gen = quote! {
         impl<'a> ::kurisu::Kurisu<'a> for #name {
-            fn from_args(env_args: Vec<String>) -> #name {
-                let mutex = Self::get_info_instance(env_args);
-                let info = mutex.lock().unwrap();
-                ::kurisu::exit_args(&info);
+            fn from_args(env_args: Vec<String>) -> Self {
+                let info = Self::get_info_instance(env_args).lock().unwrap();
+                ::kurisu::exit_args(&info, |code| { std::process::exit(code); });
                 #name {
                     #(#struct_values)*
                 }
@@ -263,6 +264,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             long: Some("help"),
                             doc: Some("Prints this message"),
                             exit: None,
+                            required_if: None,
                             default: "false",
                             value: Vec::new(),
                             occurrences: 0,
@@ -271,10 +273,11 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             name: "version",
                             value_type: "bool",
                             position: None,
-                            short: None,
+                            short: Some("V"),
                             long: Some("version"),
                             doc: Some("Prints version information"),
                             exit: None,
+                            required_if: None,
                             default: "false",
                             value: Vec::new(),
                             occurrences: 0,

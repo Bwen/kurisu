@@ -30,7 +30,10 @@ pub struct Info<'a> {
     pub args: Vec<Arg<'a>>,
 }
 
-pub fn exit_args(info: &Info<'static>) {
+pub fn exit_args<E>(info: &Info<'static>, exit: E) -> Option<i32>
+where
+    E: FnOnce(i32) -> Option<i32>,
+{
     let exit_args: Vec<&Arg<'_>> = info
         .args
         .iter()
@@ -42,20 +45,20 @@ pub fn exit_args(info: &Info<'static>) {
             continue;
         }
 
-        if arg.name == "version" {
-            std::process::exit(mayuri::print_version(&info));
+        return if arg.name == "version" {
+            exit(mayuri::print_version(&info))
         } else if arg.name == "usage" {
-            std::process::exit(mayuri::print_usage(&info));
-        }
-
-        if arg.exit.is_some() {
-            std::process::exit((arg.exit.unwrap())());
-        }
+            exit(mayuri::print_usage(&info))
+        } else {
+            exit((arg.exit.expect("Infallible"))())
+        };
     }
+
+    None
 }
 
 pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<String> {
-    let mut env_vars: Vec<String> = vec![];
+    let mut env_vars: Vec<String> = Vec::new();
     let mut previous_flag: String = String::from("");
     let mut options_ended = false;
     for arg in args {
@@ -64,19 +67,29 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
         }
 
         let mut arguments: Vec<String> = vec![arg.clone()];
+
         // Stacking short flags, check if this is a negative number
-        if !options_ended && arg.starts_with('-') && arg.parse::<isize>().is_err() && !arg.contains('=') && !arg.starts_with("--") && arg.len() > 2 {
+        if !options_ended
+            && arg.starts_with('-')
+            && arg.len() > 2
+            && arg.parse::<isize>().is_err()
+            && !arg.contains(',')
+            && !arg.contains('=')
+            && !arg.starts_with("--")
+        {
             arguments = arg.chars().skip(1).map(|a| format!("-{}", a)).collect()
         }
 
         for arg in arguments {
             let karg = &kurisu_args.iter().find(|a| a == &arg);
+            let previous_karg = &kurisu_args.iter().find(|a| a == &previous_flag);
             if previous_flag.is_empty() && karg.is_none() {
                 env_vars.push(arg.clone());
                 continue;
             }
 
-            // Check if this is a negative number
+            // Check for negative numbers
+            // FIXME: Known issue if the env_ars contains `"-m", "-4,-5" for a multiple values it is not normalized correctly. See test: normalize_env_args.multiple_comma_values
             if arg.parse::<isize>().is_err() && arg.len() > 1 && (arg.starts_with('-') || arg.starts_with("--")) {
                 // Two flags following each other
                 if !previous_flag.is_empty() {
@@ -84,8 +97,16 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
                     previous_flag = String::from("");
                 }
 
-                if karg.is_some() && karg.unwrap().is_value_none() || arg.contains('=') {
-                    env_vars.push(arg.clone());
+                if karg.is_some() && karg.expect("Infallible").is_value_none() || arg.contains('=') {
+                    // If we have a comma delimited value and karg support multiple values we split it into multiple args
+                    if karg.expect("Infallible").is_value_multiple() && arg.contains(',') {
+                        let name: Vec<&str> = arg.split('=').collect();
+                        for value in name[1].split(',') {
+                            env_vars.push(format!("{}={}", name[0], value));
+                        }
+                    } else {
+                        env_vars.push(arg.clone());
+                    }
                     continue;
                 }
 
@@ -93,7 +114,15 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
                 continue;
             }
 
-            env_vars.push(format!("{}={}", previous_flag, arg));
+            // If we have a comma delimited value and karg support multiple values we split it into multiple args
+            if previous_karg.is_some() && previous_karg.expect("Infallible").is_value_multiple() && arg.contains(',') {
+                for value in arg.split(',') {
+                    env_vars.push(format!("{}={}", previous_flag, value));
+                }
+            } else {
+                env_vars.push(format!("{}={}", previous_flag, arg));
+            }
+
             previous_flag = String::from("");
         }
     }
@@ -107,7 +136,7 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
 
 pub fn parse_value<P: Parser>(name: &str, info: &Info) -> P {
     // TODO: user parsing if arg type is `fn()` how to call its function, kurisu doc should specify which function to call...
-    let arg = info.args.iter().find(|a| name == a.name).unwrap();
+    let arg = info.args.iter().find(|a| name == a.name).expect("Infallible");
     let value = arg.value.join(VALUE_SEPARATOR);
     P::parse(value.as_str())
 }
@@ -124,7 +153,12 @@ pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<Error> {
         return Some(Error::NoArgs);
     }
 
-    let positions: Vec<i8> = info.args.iter().filter(|a| a.position.is_some()).map(|a| a.position.unwrap()).collect();
+    let positions: Vec<i8> = info
+        .args
+        .iter()
+        .filter(|a| a.position.is_some())
+        .map(|a| a.position.expect("Infallible"))
+        .collect();
 
     // Always validate invalid options & args first
     let mut pos: i8 = 0;
@@ -142,16 +176,22 @@ pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<Error> {
         }
     }
 
-    // TODO: Validate arg type range, such as usize that cant be negative, etc...
-    // TODO: Add a "required_if" annotation to add relationship between args...
     for arg in info.args.iter().filter(|a| a.is_value_required()) {
-        if arg.occurrences > 0 && arg.value.is_empty() {
+        if arg.value.is_empty() {
             return Some(Error::RequiresValue(arg.clone()));
         }
     }
 
-    // TODO: Check for conflicting flags, add annotation to denote relationship? --debug & --no-debug
-    // TODO: Positional arguments?
+    for arg in info.args.iter().filter(|a| a.required_if.is_some()) {
+        let counter_part = info.args.iter().find(|a| a.name == arg.required_if.expect("Infallible"));
+        if let Some(counter_part) = counter_part {
+            if counter_part.occurrences > 0 && arg.value.is_empty() {
+                return Some(Error::RequiresValueIf(counter_part.clone(), arg.clone()));
+            }
+        }
+    }
+
+    // TODO: Validate arg type range, such as usize that cant be negative, etc...
 
     None
 }

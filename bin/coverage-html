@@ -2,4 +2,4 @@
 
 rm -rf ./target/debug/coverage
 cargo install grcov
-grcov ./target/debug/ -t html --llvm --branch --ignore-not-existing -o ./target/debug/coverage/ --guess-directory-when-missing -s .
+grcov ./target/debug/ -t html --llvm --branch --ignore "tests*" --ignore-not-existing --guess-directory-when-missing -o ./target/debug/coverage/ -s .

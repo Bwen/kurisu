@@ -1,5 +1,6 @@
-// use std::path::PathBuf;
 use kurisu::*;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 #[derive(Debug, Kurisu)]
 /// some helpful text, tuturu ♫
@@ -11,8 +12,8 @@ struct Yargs {
     /// This is to test long documentation problem that could occur at any time...
     /// This is to test long documentation problem that could occur at any time...
     test: String,
-    // #[kurisu(pos = 1)]
-    // source_dir: Option<PathBuf>,
+    #[kurisu(pos = 1)]
+    source_dir: PathBuf,
     // #[kurisu(pos = 2)]
     // target_dir: PathBuf,
     #[kurisu(exit = "my_func")]
@@ -27,7 +28,8 @@ pub fn my_func() -> i32 {
 
 fn main() {
     let args = Yargs::from_args(std::env::args().skip(1).collect());
-    kurisu::valid_exit(args);
+    kurisu::valid_exit(&args);
 
+    println!("{:?}", args.source_dir.exists());
     println!("{:?}", args);
 }

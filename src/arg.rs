@@ -1,13 +1,10 @@
 mod error;
 mod parser;
-mod validator;
 
 pub use error::Error;
 pub use parser::{Parser, VALUE_SEPARATOR};
-pub use validator::Validator;
 
 const TYPES_NO_VALUE: &[&str] = &["bool"];
-const TYPES_OPTIONAL_VALUE: &[&str] = &["Option < String >", "Option < usize >", "Option < isize >"];
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Arg<'a> {
@@ -18,6 +15,7 @@ pub struct Arg<'a> {
     pub short: Option<&'a str>,
     pub long: Option<&'a str>,
     pub exit: Option<fn() -> i32>,
+    pub required_if: Option<&'a str>,
     pub default: &'a str,
     pub value: Vec<String>,
     pub occurrences: usize,
@@ -33,6 +31,7 @@ impl<'a> Default for Arg<'a> {
             short: None,
             long: None,
             exit: None,
+            required_if: None,
             default: "",
             value: Vec::new(),
             occurrences: 0,
@@ -52,12 +51,6 @@ impl<'a> PartialEq<String> for &mut Arg<'a> {
     }
 }
 
-impl<'a> PartialEq<str> for &Arg<'a> {
-    fn eq(&self, other: &str) -> bool {
-        self.partial_eq_string(other)
-    }
-}
-
 impl<'a> Arg<'a> {
     fn partial_eq_string<S: AsRef<str>>(&self, value: S) -> bool {
         let value = value.as_ref();
@@ -66,29 +59,31 @@ impl<'a> Arg<'a> {
         }
 
         if value.starts_with("--") && self.long.is_some() {
-            return value.starts_with(&format!("--{}", self.long.unwrap()));
+            return value.starts_with(&format!("--{}", self.long.expect("Infallible")));
         }
 
         if value.starts_with('-') && self.short.is_some() {
-            return value.starts_with(&format!("-{}", self.short.unwrap()));
+            return value.starts_with(&format!("-{}", self.short.expect("Infallible")));
         }
 
         false
     }
 
     pub fn is_value_required(&self) -> bool {
-        !TYPES_NO_VALUE.contains(&self.value_type) && !TYPES_OPTIONAL_VALUE.contains(&self.value_type)
+        !TYPES_NO_VALUE.contains(&self.value_type) && !self.value_type.starts_with("Option")
+    }
+
+    pub fn is_value_multiple(&self) -> bool {
+        self.value_type.starts_with("Vec")
     }
 
     pub fn is_value_none(&self) -> bool {
         TYPES_NO_VALUE.contains(&self.value_type)
     }
 
-    pub fn set_value(&'_ mut self, args: &[String], positions: &Vec<i8>) {
+    pub fn set_value(&'_ mut self, args: &[String], positions: &[i8]) {
         // TODO: What to do with Optional values?
-        // TODO: Handle repetitive short flags such as -vvv (Occurrences)
         // TODO: short flags that are limited 1 char... can have a value in the same word... grep -iC4 file
-        // TODO: support comma delimiter args for Vec? -o test1,test2,test3
 
         let mut pos = 1;
         let mut options_ended = false;
@@ -108,7 +103,11 @@ impl<'a> Arg<'a> {
                 }
 
                 self.occurrences += 1;
-                if self.is_value_none() {
+
+                // If we have a short, nolong u8 we put the number of occurrences in its value
+                if self.value_type == "u8" && self.long.is_none() && self.short.is_some() {
+                    self.value = vec![format!("{}", self.occurrences)];
+                } else if self.is_value_none() {
                     self.value.push(String::from("true"));
                 }
             } else if options_ended || !arg.starts_with('-') || (arg.starts_with('-') && arg.len() == 1) {
@@ -145,7 +144,5 @@ impl<'a> Arg<'a> {
         // Maybe it should be mentioned in the annotation as to WHICH env var is attached to which field, to allow branding MYPROGRAM_PATH_TO_SOMETHING
         // Or... Should it? field mysql_host for example would allow a quick access to environment variables that dont require branding...
         // Optional branding annotation?
-
-        // self.value.push(self.default.to_string());
     }
 }

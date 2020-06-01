@@ -40,6 +40,12 @@ impl Parser for bool {
     }
 }
 
+impl Parser for u8 {
+    fn parse(value: &str) -> Self {
+        value.parse::<u8>().unwrap_or_default()
+    }
+}
+
 impl Parser for usize {
     fn parse(value: &str) -> Self {
         value.parse::<usize>().unwrap_or_default()
@@ -56,6 +62,20 @@ impl Parser for Vec<usize> {
     }
 }
 
+impl Parser for Option<usize> {
+    fn parse(value: &str) -> Self {
+        if value.is_empty() {
+            return None;
+        }
+
+        if let Ok(result) = value.parse::<usize>() {
+            return Some(result);
+        }
+
+        None
+    }
+}
+
 impl Parser for isize {
     fn parse(value: &str) -> Self {
         value.parse::<isize>().unwrap_or_default()
@@ -69,6 +89,20 @@ impl Parser for Vec<isize> {
         }
 
         value.split(VALUE_SEPARATOR).map(|v| v.parse::<isize>().unwrap_or_default()).collect()
+    }
+}
+
+impl Parser for Option<isize> {
+    fn parse(value: &str) -> Self {
+        if value.is_empty() {
+            return None;
+        }
+
+        if let Ok(result) = value.parse::<isize>() {
+            return Some(result);
+        }
+
+        None
     }
 }
 

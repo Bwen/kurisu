@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 // TODO: Centralize function or find a better way to do this
 fn vec_to_string(args: Vec<&str>) -> Vec<String> {
-    let mut strings = vec![];
+    let mut strings = Vec::new();
     for arg in args {
         strings.push(arg.to_string());
     }
@@ -15,18 +15,29 @@ fn vec_to_string(args: Vec<&str>) -> Vec<String> {
 }
 
 #[test]
+fn debug_info() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {}
+
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
+    let test = format!("{:?}", info);
+    assert!(!test.is_empty());
+}
+
+#[test]
 fn builtins() {
     #[derive(Debug, Kurisu)]
     struct Yargs {}
 
-    Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(2, info.args.len());
 
     let version = info.args.iter().find(|a| a.name == "version");
     assert!(version.is_some());
     assert_eq!(version.unwrap().name, "version");
-    assert_eq!(version.unwrap().short, None);
+    assert_eq!(version.unwrap().short, Some("V"));
     assert_eq!(version.unwrap().long, Some("version"));
 
     let usage = info.args.iter().find(|a| a.name == "usage");
@@ -47,8 +58,8 @@ fn default_long() {
         long_arg: bool,
     }
 
-    Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(5, info.args.len());
 
     let arg = info.args.iter().find(|a| a.name == "long_arg");
@@ -79,8 +90,8 @@ fn default_mandatory_values() {
         vec: Vec<String>,
     }
 
-    let yargs = Yargs::from_args(vec![]);
-    let info = Yargs::get_info_instance(vec![]).lock().unwrap();
+    let yargs = Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(8, info.args.len());
 
     let arg = info.args.iter().find(|a| a.name == "version");
@@ -244,6 +255,44 @@ fn multiple_values() {
 }
 
 #[test]
+fn multiple_comma_values() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        string: Vec<String>,
+        path_buf: Vec<PathBuf>,
+        usize: Vec<usize>,
+        isize: Vec<isize>,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec![
+        "--string=mystring1,mystring2,mystring3",
+        "--usize",
+        "42,43,44",
+        "--string=mystring4",
+        "--usize",
+        "45",
+        "--isize=-42,-43,-44",
+        "--path-buf=/dir1/file1.txt,/dir1/file2.txt,/dir1/file3.txt",
+        "--isize",
+        "45",
+        "--path-buf=/dir1/file4.txt",
+    ]));
+
+    assert_eq!(yargs.string, vec_to_string(vec!["mystring1", "mystring2", "mystring3", "mystring4"]));
+    assert_eq!(yargs.usize, vec![42, 43, 44, 45]);
+    assert_eq!(yargs.isize, vec![-42, -43, -44, 45]);
+    assert_eq!(
+        yargs.path_buf,
+        vec![
+            PathBuf::from_str("/dir1/file1.txt").unwrap(),
+            PathBuf::from_str("/dir1/file2.txt").unwrap(),
+            PathBuf::from_str("/dir1/file3.txt").unwrap(),
+            PathBuf::from_str("/dir1/file4.txt").unwrap(),
+        ]
+    );
+}
+
+#[test]
 fn positional_infinite() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
@@ -312,3 +361,56 @@ fn empty_value_double_quoted() {
 }
 
 // TODO: Test supported optional (Option<T>) values
+
+#[test]
+fn optional_types() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(short)]
+        string_none: Option<String>,
+        string: Option<String>,
+        #[kurisu(short)]
+        pathbuf: Option<PathBuf>,
+        pathbuf_none: Option<PathBuf>,
+        #[kurisu(short)]
+        usize: Option<usize>,
+        usize_none: Option<usize>,
+        #[kurisu(short)]
+        isize: Option<isize>,
+        isize_none: Option<isize>,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["--string=some string", "-p=some path", "-u=42", "-i=-42"]));
+    assert_eq!(yargs.string_none, None);
+    assert_eq!(yargs.string, Some(String::from("some string")));
+    assert_eq!(yargs.pathbuf, Some(PathBuf::from_str("some path").unwrap()));
+    assert_eq!(yargs.pathbuf_none, None);
+    assert_eq!(yargs.usize, Some(42));
+    assert_eq!(yargs.usize_none, None);
+    assert_eq!(yargs.isize, Some(-42));
+    assert_eq!(yargs.isize_none, None);
+}
+
+#[test]
+fn occurrences() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(short, nolong)]
+        verbose: u8,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["-vvvv"]));
+    assert_eq!(yargs.verbose, 4);
+}
+
+#[test]
+fn not_occurrence() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(short, nolong)]
+        test: u8,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["-t", "42"]));
+    assert_eq!(yargs.test, 42);
+}
