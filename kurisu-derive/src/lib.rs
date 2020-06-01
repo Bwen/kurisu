@@ -184,6 +184,8 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         let field_doc = meta_value("doc", &field_meta_attrs, true).unwrap_or(quote! {None});
         let field_default = meta_value("default", &field_meta_attrs, false).unwrap_or(quote! {""});
         let required_if = meta_value("required_if", &field_meta_attrs, true).unwrap_or(quote! {None});
+        let env_prefix = meta_value("env_prefix", &field_meta_attrs, true).unwrap_or(quote! {None});
+        let env = meta_value("env", &field_meta_attrs, true).unwrap_or(quote! {None});
         let mut field_short = meta_value("short", &field_meta_attrs, true).unwrap_or(quote! {None});
         let mut field_long = meta_value("long", &field_meta_attrs, true).unwrap_or(quote! {});
         let field_input = meta_value("pos", &field_meta_attrs, false);
@@ -228,6 +230,8 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                 long: #field_long,
                 doc: #field_doc,
                 exit: #exit_cb,
+                env: #env,
+                env_prefix: #env_prefix,
                 required_if: #required_if,
                 default: #field_default,
                 value: Vec::new(),
@@ -264,6 +268,8 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             long: Some("help"),
                             doc: Some("Prints this message"),
                             exit: None,
+                            env: None,
+                            env_prefix: None,
                             required_if: None,
                             default: "false",
                             value: Vec::new(),
@@ -277,6 +283,8 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             long: Some("version"),
                             doc: Some("Prints version information"),
                             exit: None,
+                            env: None,
+                            env_prefix: None,
                             required_if: None,
                             default: "false",
                             value: Vec::new(),

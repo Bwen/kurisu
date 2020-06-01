@@ -3,6 +3,7 @@ mod parser;
 
 pub use error::Error;
 pub use parser::{Parser, VALUE_SEPARATOR};
+use std::collections::HashMap;
 
 const TYPES_NO_VALUE: &[&str] = &["bool"];
 
@@ -15,6 +16,8 @@ pub struct Arg<'a> {
     pub short: Option<&'a str>,
     pub long: Option<&'a str>,
     pub exit: Option<fn() -> i32>,
+    pub env: Option<&'a str>,
+    pub env_prefix: Option<&'a str>,
     pub required_if: Option<&'a str>,
     pub default: &'a str,
     pub value: Vec<String>,
@@ -31,6 +34,8 @@ impl<'a> Default for Arg<'a> {
             short: None,
             long: None,
             exit: None,
+            env: None,
+            env_prefix: None,
             required_if: None,
             default: "",
             value: Vec::new(),
@@ -139,9 +144,19 @@ impl<'a> Arg<'a> {
             return;
         }
 
-        // TODO: Fall back to check environment variables with the same name capitalized,
-        // Maybe it should be mentioned in the annotation as to WHICH env var is attached to which field, to allow branding MYPROGRAM_PATH_TO_SOMETHING
-        // Or... Should it? field mysql_host for example would allow a quick access to environment variables that dont require branding...
-        // Optional branding annotation?
+        let vars: HashMap<String, String> = std::env::vars().collect();
+        for (key, value) in vars {
+            let mut env_var = self.name.to_string();
+            if self.env.is_some() {
+                env_var = self.env.expect("Infallible").to_string();
+            } else if self.env_prefix.is_some() {
+                env_var = format!("{}{}", self.env_prefix.expect("Infallible"), self.name)
+            }
+
+            if key.to_lowercase() == env_var.to_lowercase() {
+                self.value.push(value);
+                break;
+            }
+        }
     }
 }

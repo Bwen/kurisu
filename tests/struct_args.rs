@@ -1,6 +1,7 @@
 extern crate kurisu;
 
 use kurisu::*;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -425,4 +426,48 @@ fn short_flag_no_space_value() {
 
     let yargs = Yargs::from_args(vec_to_string(vec!["-iC4"]));
     assert_eq!(yargs.itest, String::from("C4"));
+}
+
+#[test]
+fn environment_var_fallback() {
+    std::env::set_var("MY_ENV_VAR", "TESTING ENV VARS");
+
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        my_env_var: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec![]));
+    let vars: HashMap<String, String> = std::env::vars().collect();
+    assert_eq!(yargs.my_env_var, *vars.get("MY_ENV_VAR").unwrap());
+}
+
+#[test]
+fn environment_var_fallback_prefix() {
+    std::env::set_var("MY_ENV_VAR", "TESTING ENV VARS");
+
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(env_prefix = "MY_")]
+        env_var: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec![]));
+    let vars: HashMap<String, String> = std::env::vars().collect();
+    assert_eq!(yargs.env_var, *vars.get("MY_ENV_VAR").unwrap());
+}
+
+#[test]
+fn environment_var_fallback_override() {
+    std::env::set_var("MY_ENV_VAR", "TESTING ENV VARS");
+
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(env = "MY_ENV_VAR")]
+        test: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec![]));
+    let vars: HashMap<String, String> = std::env::vars().collect();
+    assert_eq!(yargs.test, *vars.get("MY_ENV_VAR").unwrap());
 }
