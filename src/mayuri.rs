@@ -8,7 +8,7 @@ pub fn print_usage_error<'a, T: Kurisu<'a>>(_kurisu_struct: &T, arg_error: Optio
             Error::NoArgs => print_usage(&info),
             Error::Invalid(arg) => print_invalid_arg(arg),
             Error::RequiresValue(arg) => print_missing_value(arg),
-            Error::RequiresValueIf(a, b) => print_missing_value(a),
+            Error::RequiresValueIf(a, _b) => print_missing_value(a),
             Error::Custom(text) => print_custom_error(text),
             Error::CustomArg(arg, text) => print_custom_arg_error(arg, text),
         };

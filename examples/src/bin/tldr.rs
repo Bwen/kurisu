@@ -1,6 +1,5 @@
 use kurisu::*;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 #[derive(Debug, Kurisu)]
 /// some helpful text, tuturu ♫

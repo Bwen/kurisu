@@ -2,8 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use proc_macro_error::abort_call_site;
-// TODO: Apply Macro hygiene as much as possible with quote_spanned
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{Attribute, Field, NestedMeta};
 
@@ -73,11 +72,11 @@ fn meta_value(name: &str, attrs: &[(proc_macro2::Ident, Option<syn::Lit>)], opti
         if ident.eq(name) {
             if value.is_some() {
                 if option_wrap {
-                    return Some(quote! { Some (#value) });
+                    return Some(quote_spanned! (ident.span() => Some (#value)));
                 }
 
                 let unwrapped_value = value.clone().unwrap();
-                return Some(quote! { #unwrapped_value });
+                return Some(quote_spanned! (ident.span() => #unwrapped_value));
             }
 
             return Some(quote! {});
@@ -96,7 +95,7 @@ fn sanitize_option_short(short: proc_macro2::TokenStream, field: &Field, existin
         }
 
         existing_shorts.push(short_letter.clone());
-        return quote! { Some (#short_letter) };
+        return quote_spanned! (field.ident.span() => Some (#short_letter));
     }
 
     let mut short_string = short.to_string();
@@ -107,7 +106,7 @@ fn sanitize_option_short(short: proc_macro2::TokenStream, field: &Field, existin
         }
 
         existing_shorts.push(short_letter.clone());
-        return quote! {Some (#short_letter)};
+        return quote_spanned! (field.ident.span() => Some (#short_letter));
     }
 
     short
@@ -124,7 +123,7 @@ fn sanitize_option_long(long: proc_macro2::TokenStream, field: &Field, existing_
         }
 
         existing_longs.push(name_string.clone());
-        return quote! { Some (#name_string) };
+        return quote_spanned! (field.ident.span() => Some (#name_string));
     }
 
     let long_string = long.to_string();
@@ -135,7 +134,7 @@ fn sanitize_option_long(long: proc_macro2::TokenStream, field: &Field, existing_
         }
 
         existing_longs.push(long.clone());
-        return quote! {Some (#long)};
+        return quote_spanned! (field.ident.span() => Some (#long));
     }
 
     long
@@ -153,17 +152,17 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         // println!("{:#?}", std::env::vars().collect::<std::collections::HashMap<String, String>>());
         let cargo_name = std::env::var("CARGO_PKG_NAME");
         if let Ok(name) = cargo_name {
-            script_name = quote! { Some (#name) };
+            script_name = quote_spanned! (script_cargo.span() => Some (#name));
         }
 
         let cargo_version = std::env::var("CARGO_PKG_VERSION");
         if let Ok(version) = cargo_version {
-            script_version = quote! { Some (#version) };
+            script_version = quote_spanned! (script_cargo.span() => Some (#version));
         }
 
         let cargo_description = std::env::var("CARGO_PKG_DESCRIPTION");
         if let Ok(doc) = cargo_description {
-            script_doc = quote! { Some (#doc) };
+            script_doc = quote_spanned! (script_cargo.span() => Some (#doc));
         }
     }
 
@@ -199,7 +198,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
             if position.is_empty() {
                 input_position = quote! {Some (0)};
             } else {
-                input_position = quote! {Some (#position)};
+                input_position = quote_spanned! (position.span() => Some (#position));
             }
         } else {
             field_short = sanitize_option_short(field_short, f, &mut existing_shorts);
@@ -221,7 +220,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
             exit_cb = quote! {Some(#ident)}
         }
 
-        quote! {
+        quote_spanned! (name.span() => {
             ::kurisu::Arg {
                 name: stringify!(#name),
                 value_type: stringify!(#ty),
@@ -237,13 +236,13 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                 value: Vec::new(),
                 occurrences: 0,
             }
-        }
+        })
     });
 
     // TODO: Implement the possibility to skip a struct field by prefixing it with _, Should not generate an Arg and should set default value to struct
     let struct_values = fields.named.iter().map(|f| {
         let name = &f.ident.clone().unwrap();
-        quote! { #name: ::kurisu::parse_value(stringify!(#name), &info), }
+        quote_spanned! (name.span() => #name: ::kurisu::parse_value(stringify!(#name), &info),)
     });
 
     let gen = quote! {
