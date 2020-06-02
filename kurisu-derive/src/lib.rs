@@ -113,7 +113,6 @@ fn sanitize_option_short(short: proc_macro2::TokenStream, field: &Field, existin
 }
 
 fn sanitize_option_long(long: proc_macro2::TokenStream, field: &Field, existing_longs: &mut Vec<String>) -> proc_macro2::TokenStream {
-    // TODO: Rename feature, like camelCase?
     // If the TokenStream is empty it means we are dealing with #[kurisu(long)] with no value or no annotation at all (default)
     if long.is_empty() {
         let name = field.ident.clone().unwrap();

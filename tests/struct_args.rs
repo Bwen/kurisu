@@ -361,8 +361,6 @@ fn empty_value_double_quoted() {
     assert_eq!(yargs.long, String::from(""));
 }
 
-// TODO: Test supported optional (Option<T>) values
-
 #[test]
 fn optional_types() {
     #[derive(Debug, Kurisu)]
