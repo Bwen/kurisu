@@ -151,7 +151,7 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
     env_vars
 }
 
-pub fn parse_value<P: Parser>(name: &str, info: &Info) -> P {
+pub fn parse_value<P: Parser>(name: &str, info: &'_ Info) -> P {
     // TODO: user parsing if arg type is `fn()` how to call its function, kurisu doc should specify which function to call...
     let arg = info.args.iter().find(|a| name == a.name).expect("Infallible");
     let value = arg.value.join(VALUE_SEPARATOR);

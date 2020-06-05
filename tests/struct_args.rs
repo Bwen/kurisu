@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate float_cmp;
+
 extern crate kurisu;
 
 use kurisu::*;
@@ -87,13 +90,14 @@ fn default_mandatory_values() {
         path_buf: PathBuf,
         usize: usize,
         isize: isize,
+        f64: f64,
         bool: bool,
         vec: Vec<String>,
     }
 
     let yargs = Yargs::from_args(Vec::new());
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
-    assert_eq!(8, info.args.len());
+    assert_eq!(9, info.args.len());
 
     let arg = info.args.iter().find(|a| a.name == "version");
     assert!(arg.is_some());
@@ -129,6 +133,12 @@ fn default_mandatory_values() {
     assert_eq!(arg.unwrap().occurrences, 0);
     assert_eq!(yargs.isize, isize::default());
 
+    let arg = info.args.iter().find(|a| a.name == "f64");
+    assert!(arg.is_some());
+    assert_eq!(arg.unwrap().default, String::from(""));
+    assert_eq!(arg.unwrap().occurrences, 0);
+    assert!(approx_eq!(f64, yargs.f64, f64::default(), ulps = 2));
+
     let arg = info.args.iter().find(|a| a.name == "bool");
     assert!(arg.is_some());
     assert_eq!(arg.unwrap().default, String::from(""));
@@ -151,6 +161,7 @@ fn values() {
         path_buf: PathBuf,
         usize: usize,
         isize: isize,
+        f64: f64,
         bool: bool,
     }
 
@@ -160,12 +171,14 @@ fn values() {
         "--usize=42",
         "--isize",
         "-42",
+        "--f64=4.2222",
         "--bool=true",
     ]));
 
     assert_eq!(yargs.string, String::from("mystring"));
     assert_eq!(yargs.usize, 42);
     assert_eq!(yargs.isize, -42);
+    assert!(approx_eq!(f64, yargs.f64, 4.2222, ulps = 2));
     assert_eq!(yargs.bool, true);
     assert_eq!(yargs.path_buf, PathBuf::from_str("/dir/file.txt").unwrap());
 }

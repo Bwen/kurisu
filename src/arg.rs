@@ -98,7 +98,7 @@ impl<'a> Arg<'a> {
 
             if self.eq(arg) {
                 if arg.contains('=') {
-                    let value: Vec<&str> = arg.split('=').collect();
+                    let value: Vec<&str> = arg.splitn(2, '=').collect();
                     self.occurrences += 1;
                     self.value.push(value[1].to_owned());
                     continue;

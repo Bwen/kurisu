@@ -1,12 +1,15 @@
 pub const VALUE_SEPARATOR: &str = "(_(__)===D";
 
+#[cfg(feature = "parser_extras")]
+mod extras;
+#[cfg(feature = "parser_extras")]
+pub use extras::*;
+
 use std::path::PathBuf;
 
 pub trait Parser {
     fn parse(value: &str) -> Self;
 }
-
-// TODO: Implement parser for IpAddr v4&v6? HashMap? O.o  what else? Generic? ...
 
 impl Parser for String {
     fn parse(value: &str) -> Self {
@@ -99,6 +102,36 @@ impl Parser for Option<isize> {
         }
 
         if let Ok(result) = value.parse::<isize>() {
+            return Some(result);
+        }
+
+        None
+    }
+}
+
+impl Parser for f64 {
+    fn parse(value: &str) -> Self {
+        value.parse::<f64>().unwrap_or_default()
+    }
+}
+
+impl Parser for Vec<f64> {
+    fn parse(value: &str) -> Self {
+        if value.is_empty() {
+            return Vec::new();
+        }
+
+        value.split(VALUE_SEPARATOR).map(|v| v.parse::<f64>().unwrap_or_default()).collect()
+    }
+}
+
+impl Parser for Option<f64> {
+    fn parse(value: &str) -> Self {
+        if value.is_empty() {
+            return None;
+        }
+
+        if let Ok(result) = value.parse::<f64>() {
             return Some(result);
         }
 

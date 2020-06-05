@@ -171,6 +171,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         script_noargs = quote! {true};
     }
 
+    let mut has_pos_infinite = false;
     let mut existing_shorts: Vec<String> = vec![String::from("V"), String::from("h")];
     let mut existing_longs: Vec<String> = vec![String::from("version"), String::from("help")];
     let fields = get_fields_named(&ast.data);
@@ -192,9 +193,13 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
             field_short = quote! {None};
             field_long = quote! {None};
 
-            // TODO: Add check to prevent more than one infinite args field
             // If its empty it means we got #[kurisu(pos)] without any value, thus infinite positional arguments
             if position.is_empty() {
+                if has_pos_infinite {
+                    abort_call_site!("kurisu macro only support one infinite positional argument");
+                }
+
+                has_pos_infinite = true;
                 input_position = quote! {Some (0)};
             } else {
                 input_position = quote_spanned! (position.span() => Some (#position));
