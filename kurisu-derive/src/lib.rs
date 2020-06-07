@@ -27,6 +27,7 @@ fn meta_attributes(attrs: &[Attribute]) -> Vec<(proc_macro2::Ident, Option<syn::
     let mut attributes: Vec<(proc_macro2::Ident, Option<syn::Lit>)> = Vec::new();
     for attr in attrs.iter() {
         if attr.path.is_ident("doc") {
+            println!("{:#?}", attr);
             if let Ok(meta) = attr.parse_meta() {
                 if let syn::Meta::NameValue(syn::MetaNameValue { ref lit, .. }) = meta {
                     let doc = quote! {#lit}.to_string().replace('"', "");
