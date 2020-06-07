@@ -86,7 +86,7 @@ impl<'a> PartialEq<String> for &mut Arg<'a> {
 }
 
 impl<'a> PartialEq<Arg<'a>> for Arg<'a> {
-    fn eq(&self, other: &Arg) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         if (self.long.is_some() && self.long.is_some() && self.long.unwrap() == other.long.unwrap())
             || (self.short.is_some() && self.short.is_some() && self.short.unwrap() == other.short.unwrap())
         {

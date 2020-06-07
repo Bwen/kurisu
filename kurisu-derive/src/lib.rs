@@ -27,7 +27,6 @@ fn meta_attributes(attrs: &[Attribute]) -> Vec<(proc_macro2::Ident, Option<syn::
     let mut attributes: Vec<(proc_macro2::Ident, Option<syn::Lit>)> = Vec::new();
     for attr in attrs.iter() {
         if attr.path.is_ident("doc") {
-            println!("{:#?}", attr);
             if let Ok(meta) = attr.parse_meta() {
                 if let syn::Meta::NameValue(syn::MetaNameValue { ref lit, .. }) = meta {
                     let doc = quote! {#lit}.to_string().replace('"', "");
@@ -59,7 +58,7 @@ fn meta_attributes(attrs: &[Attribute]) -> Vec<(proc_macro2::Ident, Option<syn::
         attributes.push((
             proc_macro2::Ident::new("doc", proc_macro2::Span::call_site()),
             Some(syn::Lit::Str(syn::LitStr::new(
-                doc_lines.join(" ").trim(),
+                doc_lines.join("\n").trim(),
                 proc_macro2::Span::call_site(),
             ))),
         ));
@@ -143,13 +142,15 @@ fn sanitize_option_long(long: proc_macro2::TokenStream, field: &Field, existing_
 fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let struct_meta_attrs = meta_attributes(&ast.attrs);
-    let mut script_doc = meta_value("doc", &struct_meta_attrs, true).unwrap_or(quote! {None});
+    let script_doc = meta_value("doc", &struct_meta_attrs, true).unwrap_or(quote! {None});
+    let mut script_desc = meta_value("desc", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_version = meta_value("version", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_name = meta_value("name", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let script_nosort = meta_value("nosort", &struct_meta_attrs, true);
     let no_sort = script_nosort.is_some();
     let script_cargo = meta_value("cargo", &struct_meta_attrs, false);
     if script_cargo.is_some() {
+        // TODO: only overwrite value if there is not already a value, allowing to combine all... AKA only taking version from cargo
         // CARGO_PKG_AUTHORS, CARGO_PKG_HOMEPAGE
         // println!("{:#?}", std::env::vars().collect::<std::collections::HashMap<String, String>>());
         let cargo_name = std::env::var("CARGO_PKG_NAME");
@@ -163,8 +164,8 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         }
 
         let cargo_description = std::env::var("CARGO_PKG_DESCRIPTION");
-        if let Ok(doc) = cargo_description {
-            script_doc = quote_spanned! (script_cargo.span() => Some (#doc));
+        if let Ok(desc) = cargo_description {
+            script_desc = quote_spanned! (script_cargo.span() => Some (#desc));
         }
     }
 
@@ -323,6 +324,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                     std::sync::Mutex::new(Info {
                         name: #script_name,
                         version: #script_version,
+                        desc: #script_desc,
                         doc: #script_doc,
                         allow_noargs: #script_noargs,
                         env_args,

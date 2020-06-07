@@ -1,5 +1,9 @@
 use crate::arg::Error;
 use crate::{Arg, ExitCode, Info, Kurisu};
+use textwrap::Wrapper;
+
+const DESC_SPACER: &str = "  ";
+const ARG_INDENT: &str = "    ";
 
 pub fn print_usage_error<'a, T: Kurisu<'a>>(_kurisu_struct: &T, arg_error: Option<Error>) {
     if let Some(error) = arg_error {
@@ -48,47 +52,61 @@ pub fn print_help(info: &Info) -> i32 {
     const TERM_WIDTH: usize = 70;
     let bin_name = info.name.unwrap_or("unknown");
     println!("{} {}", bin_name, info.version.unwrap_or("0"));
-    println!("{}", textwrap::fill(info.doc.unwrap_or(""), TERM_WIDTH));
+    if let Some(desc) = info.desc {
+        println!("{}", textwrap::fill(desc, TERM_WIDTH));
+    }
 
-    println!();
-    println!("USAGE:");
-    println!("{} [OPTIONS] [ARGS]", bin_name);
-
+    let args: Vec<&Arg> = info.args.iter().filter(|a| a.position.is_some()).collect();
     let flags: Vec<&Arg> = info
         .args
         .iter()
         .filter(|a| a.is_value_none() && (a.long.is_some() || a.short.is_some()))
         .collect();
-    if !flags.is_empty() {
-        println!();
-        println!("FLAGS:");
-        let lines = get_arg_lines(flags, TERM_WIDTH);
-        for line in lines {
-            println!("{}", line);
-        }
-    }
-
     let options: Vec<&Arg> = info
         .args
         .iter()
         .filter(|a| !a.is_value_none() && (a.long.is_some() || a.short.is_some()))
         .collect();
 
-    if !options.is_empty() {
+    let usage_args = if args.len() == 1 {
+        let first_arg = format!("{}", args[0]);
+        format!(" {}", first_arg.trim())
+    } else if !args.is_empty() {
+        String::from(" [ARGS]")
+    } else {
+        String::from("")
+    };
+
+    let usage_options = if !flags.is_empty() && !options.is_empty() {
+        " [OPTIONS]"
+    } else {
+        " [FLAGS]"
+    };
+
+    println!();
+    println!("USAGE:");
+    println!("{}{}{}{}", ARG_INDENT, bin_name, usage_options, usage_args);
+
+    if !flags.is_empty() {
         println!();
-        println!("OPTIONS:");
-        let lines = get_arg_lines(options, TERM_WIDTH);
-        for line in lines {
+        println!("FLAGS:");
+        for line in get_arg_lines(flags, TERM_WIDTH) {
             println!("{}", line);
         }
     }
 
-    let args: Vec<&Arg> = info.args.iter().filter(|a| a.position.is_some()).collect();
+    if !options.is_empty() {
+        println!();
+        println!("OPTIONS:");
+        for line in get_arg_lines(options, TERM_WIDTH) {
+            println!("{}", line);
+        }
+    }
+
     if !args.is_empty() {
         println!();
         println!("ARGS:");
-        let lines = get_arg_lines(args, TERM_WIDTH);
-        for line in lines {
+        for line in get_arg_lines(args, TERM_WIDTH) {
             println!("{}", line);
         }
     }
@@ -96,23 +114,26 @@ pub fn print_help(info: &Info) -> i32 {
     // println!();
     // println!("SUBCOMMANDS:");
 
-    println!();
-    println!("DISCUSSION:");
+    if let Some(doc) = info.doc {
+        println!();
+        println!("DISCUSSION:");
+        let wrapper = Wrapper::new(TERM_WIDTH).initial_indent(ARG_INDENT).subsequent_indent(ARG_INDENT);
+        println!("{}", wrapper.wrap(doc).join("\n"));
+    }
 
     ExitCode::USAGE.into()
 }
 
-// fn get_args_lines(args: &[Arg], term_width: usize) -> Vec<String> {}
-
 fn get_arg_lines(args: Vec<&Arg>, term_width: usize) -> Vec<String> {
-    const DESC_SPACER: &str = "  ";
-    const ARG_INDENT: &str = "    ";
     let mut lines: Vec<String> = Vec::new();
 
     let column1_width = args.iter().map(|a| format!("{}{}", ARG_INDENT, a).len()).max_by(|a, b| a.cmp(b)).unwrap();
     for arg in args {
-        let doc = if let Some(doc) = arg.doc { doc } else { "" };
-        let column2_width = term_width - column1_width;
+        let doc = if let Some(doc) = arg.doc {
+            doc.replace("\n", " ")
+        } else {
+            String::from("")
+        };
 
         let default = if !arg.default.is_empty() && !arg.is_value_none() {
             format!(" [default: {}]", arg.default)
@@ -120,22 +141,18 @@ fn get_arg_lines(args: Vec<&Arg>, term_width: usize) -> Vec<String> {
             String::from("")
         };
 
-        // Column width minus 1 because we add a leading space for the other lines of the description
-        let desc_wrap = textwrap::fill(format!("{}{}", doc, default).as_str(), column2_width - 1);
-        let mut desc = desc_wrap.clone();
-        let mut desc_parts: Vec<&str> = vec![];
-        if desc_wrap.contains('\n') {
-            desc_parts = desc_wrap.split('\n').collect();
-            desc = desc_parts.drain(0..1).collect();
-        }
-
         let arg_string = format!("{}{}", ARG_INDENT, arg);
-        let mut line = format!("{:width$}{}{}\n", arg_string, DESC_SPACER, desc, width = column1_width);
-        for part in desc_parts {
-            line = format!("{}{:width$}{} {}\n", line, "", DESC_SPACER, part.trim_start(), width = column1_width);
-        }
+        let extra_lines_indent = String::from(" ").repeat(DESC_SPACER.len() + column1_width + 1);
+        let wrapper = Wrapper::new(term_width).subsequent_indent(extra_lines_indent.as_str());
+        let mut line = wrapper
+            .wrap(format!("{:width$}{}{}{}", arg_string, DESC_SPACER, doc, default, width = column1_width).as_str())
+            .join("\n");
 
-        lines.push(line.trim_matches('\n').to_string());
+        line = line.trim_matches('\n').to_string();
+        if arg.position.is_some() {
+            line = format!("{}{}", ARG_INDENT, line.trim().to_string());
+        }
+        lines.push(line);
     }
 
     lines

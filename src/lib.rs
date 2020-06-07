@@ -24,6 +24,7 @@ pub trait Kurisu<'a> {
 pub struct Info<'a> {
     pub name: Option<&'a str>,
     pub version: Option<&'a str>,
+    pub desc: Option<&'a str>,
     pub doc: Option<&'a str>,
     pub allow_noargs: bool,
     pub env_args: Vec<String>,
