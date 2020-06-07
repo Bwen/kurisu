@@ -145,6 +145,8 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
     let mut script_doc = meta_value("doc", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_version = meta_value("version", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_name = meta_value("name", &struct_meta_attrs, true).unwrap_or(quote! {None});
+    let script_nosort = meta_value("nosort", &struct_meta_attrs, true);
+    let no_sort = script_nosort.is_some();
     let script_cargo = meta_value("cargo", &struct_meta_attrs, false);
     if script_cargo.is_some() {
         // CARGO_PKG_AUTHORS, CARGO_PKG_HOMEPAGE
@@ -180,6 +182,8 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         let ty = &f.ty;
 
         let field_meta_attrs = meta_attributes(&f.attrs);
+        let value_name = meta_value("vname", &field_meta_attrs, true).unwrap_or(quote! {None});
+        // TODO: Two type of docs, description of binary and one for the discussion comment at the bottom of usage description // vs discussion ///
         let field_doc = meta_value("doc", &field_meta_attrs, true).unwrap_or(quote! {None});
         let field_default = meta_value("default", &field_meta_attrs, false).unwrap_or(quote! {""});
         let required_if = meta_value("required_if", &field_meta_attrs, true).unwrap_or(quote! {None});
@@ -227,6 +231,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         quote_spanned! (name.span() => {
             ::kurisu::Arg {
                 name: stringify!(#name),
+                vname: #value_name,
                 value_type: stringify!(#ty),
                 position: #input_position,
                 short: #field_short,
@@ -265,6 +270,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                     let mut kurisu_args = vec![
                         ::kurisu::Arg {
                             name: "usage",
+                            vname: None,
                             value_type: "bool",
                             position: None,
                             short: Some("h"),
@@ -280,6 +286,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                         },
                         ::kurisu::Arg {
                             name: "version",
+                            vname: None,
                             value_type: "bool",
                             position: None,
                             short: Some("V"),
@@ -305,6 +312,11 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
 
                     for arg in kurisu_args.iter_mut() {
                         arg.set_value(&mut env_args, &positions);
+                    }
+
+                    // Sort args for Display usage
+                    if !#no_sort {
+                        kurisu_args.sort_by(|a, b| a.partial_cmp(b).unwrap());
                     }
 
                     std::sync::Mutex::new(Info {

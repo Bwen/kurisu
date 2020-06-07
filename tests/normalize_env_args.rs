@@ -1,5 +1,3 @@
-extern crate kurisu;
-
 use kurisu::Arg;
 use kurisu::*;
 

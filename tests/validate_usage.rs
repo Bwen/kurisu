@@ -1,5 +1,3 @@
-extern crate kurisu;
-
 use kurisu::arg::Error;
 use kurisu::*;
 use std::path::PathBuf;
@@ -82,20 +80,23 @@ fn value_empty() {
 fn value_required() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
+        // If we have a default the value should not generate a usage error
+        #[kurisu(default = "something")]
+        aflag: String,
         #[kurisu(short)]
         short: String,
         long: String,
     }
 
     let yargs = Yargs::from_args(vec_to_string(vec!["-s", "--long"]));
-    let short = {
+    let long = {
         let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
-        info.args.iter().find(|a| a.name == "short").unwrap().clone()
+        info.args.iter().find(|a| a.name == "long").unwrap().clone()
     };
 
     let error = kurisu::validate_usage(&yargs);
     assert!(error.is_some(), "We should get an Error::RequiresValue");
-    assert_eq!(error.unwrap(), Error::RequiresValue(short));
+    assert_eq!(error.unwrap(), Error::RequiresValue(long));
 }
 
 #[test]

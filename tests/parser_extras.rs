@@ -1,5 +1,3 @@
-extern crate kurisu;
-
 #[cfg(feature = "parser_extras")]
 use kurisu::*;
 

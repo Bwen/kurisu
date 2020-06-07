@@ -2,21 +2,29 @@ use kurisu::*;
 use std::path::PathBuf;
 
 #[derive(Debug, Kurisu)]
+#[kurisu(name = "tldr", version = "1.0.2")]
 /// some helpful text, tuturu ♫
 /// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫
 /// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫
-#[kurisu]
+/// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫
+/// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫
+// Tool Long Didnt Read Example
+// Hmmm multi-line?
 struct Yargs {
-    #[kurisu(long = "very-long-option")]
+    #[kurisu(long = "long")]
     /// This is to test long documentation problem that could occur at any time...
-    /// This is to test long documentation problem that could occur at any time...
-    test: String,
+    #[kurisu(vname = "potatoe")]
+    test: Vec<String>,
     #[kurisu(pos = 1)]
+    /// The source directory plz
     source_dir: PathBuf,
     // #[kurisu(pos = 2)]
     // target_dir: PathBuf,
     #[kurisu(exit = "my_func")]
     bob: bool,
+    #[kurisu(short, nolong, default = "203")]
+    /// Blah blah blog
+    short: usize,
 }
 
 pub fn my_func() -> i32 {

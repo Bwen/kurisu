@@ -48,7 +48,7 @@ where
         return if arg.name == "version" {
             exit(mayuri::print_version(&info))
         } else if arg.name == "usage" {
-            exit(mayuri::print_usage(&info))
+            exit(mayuri::print_help(&info))
         } else {
             exit((arg.exit.expect("Infallible"))())
         };

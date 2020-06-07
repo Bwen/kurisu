@@ -1,15 +1,19 @@
 mod error;
 mod parser;
 
+use core::fmt;
 pub use error::Error;
 pub use parser::{Parser, VALUE_SEPARATOR};
+use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::fmt::Display;
 
 const TYPES_NO_VALUE: &[&str] = &["bool"];
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Arg<'a> {
     pub name: &'a str,
+    pub vname: Option<&'a str>,
     pub value_type: &'a str,
     pub position: Option<i8>,
     pub doc: Option<&'a str>,
@@ -28,6 +32,7 @@ impl<'a> Default for Arg<'a> {
     fn default() -> Arg<'a> {
         Arg {
             name: "",
+            vname: None,
             value_type: "",
             position: None,
             doc: None,
@@ -44,6 +49,30 @@ impl<'a> Default for Arg<'a> {
     }
 }
 
+impl<'a> Display for Arg<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut short = String::from("  ");
+        if let Some(s) = self.short {
+            short = format!("-{}", s);
+        }
+
+        let mut long = String::from("");
+        if let Some(l) = self.long {
+            long = format!(" --{}", l);
+        }
+
+        let multiple = if self.is_value_multiple() { "..." } else { "" };
+        let value = if !self.is_value_none() {
+            let value_name = if self.vname.is_some() { self.vname.unwrap() } else { self.name };
+            format!(" <{}>{}", value_name.to_uppercase(), multiple)
+        } else {
+            String::from("")
+        };
+
+        write!(f, "{}{}{}", short, long, value)
+    }
+}
+
 impl<'a> PartialEq<String> for &Arg<'a> {
     fn eq(&self, other: &String) -> bool {
         self.partial_eq_string(other)
@@ -56,7 +85,35 @@ impl<'a> PartialEq<String> for &mut Arg<'a> {
     }
 }
 
+impl<'a> PartialEq<Arg<'a>> for Arg<'a> {
+    fn eq(&self, other: &Arg) -> bool {
+        if (self.long.is_some() && self.long.is_some() && self.long.unwrap() == other.long.unwrap())
+            || (self.short.is_some() && self.short.is_some() && self.short.unwrap() == other.short.unwrap())
+        {
+            true
+        } else {
+            self.name == other.name
+        }
+    }
+}
+
+impl<'a> PartialOrd for Arg<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.get_first_letter().cmp(&other.get_first_letter()))
+    }
+}
+
 impl<'a> Arg<'a> {
+    fn get_first_letter(&self) -> &'a str {
+        if let Some(long) = self.long {
+            &long[0..1]
+        } else if let Some(short) = self.short {
+            short
+        } else {
+            "0"
+        }
+    }
+
     fn partial_eq_string<S: AsRef<str>>(&self, value: S) -> bool {
         let value = value.as_ref();
         if !value.starts_with('-') {
@@ -75,7 +132,7 @@ impl<'a> Arg<'a> {
     }
 
     pub fn is_value_required(&self) -> bool {
-        !TYPES_NO_VALUE.contains(&self.value_type) && !self.value_type.starts_with("Option")
+        self.default.is_empty() && !TYPES_NO_VALUE.contains(&self.value_type) && !self.value_type.starts_with("Option")
     }
 
     pub fn is_value_multiple(&self) -> bool {
@@ -142,18 +199,22 @@ impl<'a> Arg<'a> {
             return;
         }
 
-        let vars: HashMap<String, String> = std::env::vars().collect();
-        for (key, value) in vars {
-            let mut env_var = self.name.to_string();
-            if self.env.is_some() {
-                env_var = self.env.expect("Infallible").to_string();
-            } else if self.env_prefix.is_some() {
-                env_var = format!("{}{}", self.env_prefix.expect("Infallible"), self.name)
-            }
+        if !self.default.is_empty() {
+            self.value.push(self.default.to_string());
+        } else {
+            let vars: HashMap<String, String> = std::env::vars().collect();
+            for (key, value) in vars {
+                let mut env_var = self.name.to_string();
+                if self.env.is_some() {
+                    env_var = self.env.expect("Infallible").to_string();
+                } else if self.env_prefix.is_some() {
+                    env_var = format!("{}{}", self.env_prefix.expect("Infallible"), self.name)
+                }
 
-            if key.to_lowercase() == env_var.to_lowercase() {
-                self.value.push(value);
-                break;
+                if key.to_lowercase() == env_var.to_lowercase() {
+                    self.value.push(value);
+                    break;
+                }
             }
         }
     }

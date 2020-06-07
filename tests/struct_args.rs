@@ -1,8 +1,6 @@
 #[macro_use]
 extern crate float_cmp;
 
-extern crate kurisu;
-
 use kurisu::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -93,11 +91,13 @@ fn default_mandatory_values() {
         f64: f64,
         bool: bool,
         vec: Vec<String>,
+        #[kurisu(default = "42")]
+        default: usize,
     }
 
     let yargs = Yargs::from_args(Vec::new());
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
-    assert_eq!(9, info.args.len());
+    assert_eq!(10, info.args.len());
 
     let arg = info.args.iter().find(|a| a.name == "version");
     assert!(arg.is_some());
@@ -144,6 +144,12 @@ fn default_mandatory_values() {
     assert_eq!(arg.unwrap().default, String::from(""));
     assert_eq!(arg.unwrap().occurrences, 0);
     assert_eq!(yargs.bool, bool::default());
+
+    let arg = info.args.iter().find(|a| a.name == "default");
+    assert!(arg.is_some());
+    assert_eq!(arg.unwrap().default, String::from("42"));
+    assert_eq!(arg.unwrap().occurrences, 0);
+    assert_eq!(yargs.default, 42);
 
     let arg = info.args.iter().find(|a| a.name == "vec");
     assert!(arg.is_some());

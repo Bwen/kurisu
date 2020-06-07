@@ -1,5 +1,3 @@
-extern crate kurisu;
-
 use kurisu::*;
 use std::fs;
 use toml::Value;
