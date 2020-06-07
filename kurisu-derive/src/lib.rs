@@ -143,36 +143,35 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let struct_meta_attrs = meta_attributes(&ast.attrs);
     let script_doc = meta_value("doc", &struct_meta_attrs, true).unwrap_or(quote! {None});
+    let script_nosort = meta_value("nosort", &struct_meta_attrs, true).is_some();
+    let script_noargs = meta_value("allow_noargs", &struct_meta_attrs, true).is_some();
     let mut script_desc = meta_value("desc", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_version = meta_value("version", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_name = meta_value("name", &struct_meta_attrs, true).unwrap_or(quote! {None});
-    let script_nosort = meta_value("nosort", &struct_meta_attrs, true);
-    let no_sort = script_nosort.is_some();
     let script_cargo = meta_value("cargo", &struct_meta_attrs, false);
     if script_cargo.is_some() {
-        // TODO: only overwrite value if there is not already a value, allowing to combine all... AKA only taking version from cargo
         // CARGO_PKG_AUTHORS, CARGO_PKG_HOMEPAGE
         // println!("{:#?}", std::env::vars().collect::<std::collections::HashMap<String, String>>());
-        let cargo_name = std::env::var("CARGO_PKG_NAME");
-        if let Ok(name) = cargo_name {
-            script_name = quote_spanned! (script_cargo.span() => Some (#name));
+        if &script_name.to_string() == "None" {
+            let cargo_name = std::env::var("CARGO_PKG_NAME");
+            if let Ok(name) = cargo_name {
+                script_name = quote_spanned!(script_cargo.span() => Some (#name));
+            }
         }
 
-        let cargo_version = std::env::var("CARGO_PKG_VERSION");
-        if let Ok(version) = cargo_version {
-            script_version = quote_spanned! (script_cargo.span() => Some (#version));
+        if &script_version.to_string() == "None" {
+            let cargo_version = std::env::var("CARGO_PKG_VERSION");
+            if let Ok(version) = cargo_version {
+                script_version = quote_spanned!(script_cargo.span() => Some (#version));
+            }
         }
 
-        let cargo_description = std::env::var("CARGO_PKG_DESCRIPTION");
-        if let Ok(desc) = cargo_description {
-            script_desc = quote_spanned! (script_cargo.span() => Some (#desc));
+        if &script_desc.to_string() == "None" {
+            let cargo_description = std::env::var("CARGO_PKG_DESCRIPTION");
+            if let Ok(desc) = cargo_description {
+                script_desc = quote_spanned!(script_cargo.span() => Some (#desc));
+            }
         }
-    }
-
-    let mut script_noargs = meta_value("allow_noargs", &struct_meta_attrs, false).unwrap_or(quote! {false});
-    // If noargs is empty it means that the option exists with no value
-    if script_noargs.is_empty() {
-        script_noargs = quote! {true};
     }
 
     let mut has_pos_infinite = false;
@@ -185,7 +184,6 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
 
         let field_meta_attrs = meta_attributes(&f.attrs);
         let value_name = meta_value("vname", &field_meta_attrs, true).unwrap_or(quote! {None});
-        // TODO: Two type of docs, description of binary and one for the discussion comment at the bottom of usage description // vs discussion ///
         let field_doc = meta_value("doc", &field_meta_attrs, true).unwrap_or(quote! {None});
         let field_default = meta_value("default", &field_meta_attrs, false).unwrap_or(quote! {""});
         let required_if = meta_value("required_if", &field_meta_attrs, true).unwrap_or(quote! {None});
@@ -317,7 +315,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                     }
 
                     // Sort args for Display usage
-                    if !#no_sort {
+                    if !#script_nosort {
                         kurisu_args.sort_by(|a, b| a.partial_cmp(b).unwrap());
                     }
 

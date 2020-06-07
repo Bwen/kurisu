@@ -5,14 +5,16 @@ use toml::Value;
 #[test]
 fn annotation() {
     #[derive(Debug, Kurisu)]
-    #[kurisu(name = "yargs", version = "1.0.0", doc = "some doc here")]
+    #[kurisu(name = "yargs", version = "1.0.0", desc = "some desc here")]
     struct Yargs {}
 
     Yargs::from_args(Vec::new());
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(info.name, Some("yargs"));
     assert_eq!(info.version, Some("1.0.0"));
-    assert_eq!(info.doc, Some("some doc here"));
+    assert_eq!(info.desc, Some("some desc here"));
+    assert_eq!(info.desc, Some("some desc here"));
+    assert_eq!(info.allow_noargs, false);
 }
 
 #[test]
@@ -28,7 +30,21 @@ fn cargo() {
 
     assert_eq!(info.name, Some(cargo_toml["package"]["name"].as_str().unwrap()));
     assert_eq!(info.version, Some(cargo_toml["package"]["version"].as_str().unwrap()));
-    assert_eq!(info.doc, Some(cargo_toml["package"]["description"].as_str().unwrap()));
+    assert_eq!(info.desc, Some(cargo_toml["package"]["description"].as_str().unwrap()));
+}
+
+#[test]
+fn cargo_only_if_no_value() {
+    #[derive(Debug, Kurisu)]
+    #[kurisu(cargo, name = "yargs", version = "1.2.3", desc = "some desc here")]
+    struct Yargs {}
+
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
+
+    assert_eq!(info.name, Some("yargs"));
+    assert_eq!(info.version, Some("1.2.3"));
+    assert_eq!(info.desc, Some("some desc here"));
 }
 
 #[test]
@@ -41,7 +57,7 @@ fn doc() {
 
     Yargs::from_args(Vec::new());
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
-    assert_eq!(info.doc, Some("line one line two line three"));
+    assert_eq!(info.doc, Some("line one\nline two\nline three"));
 }
 
 #[test]
