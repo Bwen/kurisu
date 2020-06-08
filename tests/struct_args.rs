@@ -81,6 +81,36 @@ fn default_long() {
 }
 
 #[test]
+fn auto_shorts() {
+    #[derive(Debug, Kurisu)]
+    #[kurisu(auto_shorts)]
+    struct Yargs {
+        short: bool,
+        more: bool,
+        long_arg: bool,
+    }
+
+    Yargs::from_args(Vec::new());
+    let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
+    assert_eq!(5, info.args.len());
+
+    let arg = info.args.iter().find(|a| a.name == "long_arg");
+    assert!(arg.is_some());
+    assert_eq!(arg.unwrap().short, Some("l"));
+    assert_eq!(arg.unwrap().long, Some("long-arg"));
+
+    let arg = info.args.iter().find(|a| a.name == "short");
+    assert!(arg.is_some());
+    assert_eq!(arg.unwrap().short, Some("s"));
+    assert_eq!(arg.unwrap().long, Some("short"));
+
+    let arg = info.args.iter().find(|a| a.name == "more");
+    assert!(arg.is_some());
+    assert_eq!(arg.unwrap().short, Some("m"));
+    assert_eq!(arg.unwrap().long, Some("more"));
+}
+
+#[test]
 fn default_mandatory_values() {
     #[derive(Debug, Kurisu)]
     struct Yargs {

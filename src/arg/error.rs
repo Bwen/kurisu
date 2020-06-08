@@ -6,6 +6,7 @@ pub enum Error {
     CustomArg(Arg<'static>, String),
     NoArgs,
     Invalid(String),
+    RequiresPositional(Arg<'static>),
     RequiresValue(Arg<'static>),
     RequiresValueIf(Arg<'static>, Arg<'static>),
 }

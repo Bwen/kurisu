@@ -86,9 +86,14 @@ fn meta_value(name: &str, attrs: &[(proc_macro2::Ident, Option<syn::Lit>)], opti
     })
 }
 
-fn sanitize_option_short(short: proc_macro2::TokenStream, field: &Field, existing_shorts: &mut Vec<String>) -> proc_macro2::TokenStream {
+fn sanitize_option_short(
+    short: proc_macro2::TokenStream,
+    field: &Field,
+    existing_shorts: &mut Vec<String>,
+    auto_shorts: bool,
+) -> proc_macro2::TokenStream {
     // If the TokenStream is empty it means we are dealing with #[kurisu(short)] with no value or no annotation at all
-    if short.is_empty() {
+    if short.is_empty() || auto_shorts {
         let short_letter: String = field.ident.clone().unwrap().to_string().drain(0..1).collect();
         if existing_shorts.contains(&short_letter) {
             return syn::Error::new(field.span(), format!("Short flag -{} already bound to another field", short_letter)).to_compile_error();
@@ -145,6 +150,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
     let script_doc = meta_value("doc", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let script_nosort = meta_value("nosort", &struct_meta_attrs, true).is_some();
     let script_noargs = meta_value("allow_noargs", &struct_meta_attrs, true).is_some();
+    let auto_shorts = meta_value("auto_shorts", &struct_meta_attrs, true).is_some();
     let mut script_desc = meta_value("desc", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_version = meta_value("version", &struct_meta_attrs, true).unwrap_or(quote! {None});
     let mut script_name = meta_value("name", &struct_meta_attrs, true).unwrap_or(quote! {None});
@@ -209,7 +215,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                 input_position = quote_spanned! (position.span() => Some (#position));
             }
         } else {
-            field_short = sanitize_option_short(field_short, f, &mut existing_shorts);
+            field_short = sanitize_option_short(field_short, f, &mut existing_shorts, auto_shorts);
 
             let nolong = meta_value("nolong", &field_meta_attrs, true).unwrap_or(quote! {None});
             // If nolong is empty it means that the option exists with no value

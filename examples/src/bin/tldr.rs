@@ -2,7 +2,7 @@ use kurisu::*;
 use std::path::PathBuf;
 
 #[derive(Debug, Kurisu)]
-#[kurisu(name = "tldr", version = "1.0.2", desc = "Tool Long Didnt Read Example")]
+#[kurisu(name = "tldr", version = "1.0.2", desc = "Tool Long Didnt Read Example", auto_shorts)]
 /// some helpful text, tuturu ♫
 /// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫1
 /// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫2
@@ -12,21 +12,23 @@ use std::path::PathBuf;
 ///
 /// tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫ tuturu ♫5
 struct Yargs {
-    #[kurisu(long = "long")]
     /// This is to test1 long documentation problem that could occur at any time...
     /// This is to test2 long documentation problem that could occur at any time...
     #[kurisu(vname = "potatoe")]
     test: Vec<String>,
+    #[kurisu(pos = 2)]
+    /// The target directory plz
+    target_dir: PathBuf,
     #[kurisu(pos = 1)]
     /// The source directory plz
-    source_dir: Vec<PathBuf>,
-    // #[kurisu(pos = 2)]
-    // target_dir: PathBuf,
+    source_dir: PathBuf,
     #[kurisu(exit = "my_func")]
-    bob: bool,
+    zob: bool,
     #[kurisu(short, nolong, default = "203")]
     /// Blah blah blog
     short: usize,
+    #[kurisu(short)]
+    bobby: String,
 }
 
 pub fn my_func() -> i32 {
@@ -41,4 +43,5 @@ fn main() {
 
     // println!("{:?}", args.source_dir.exists());
     // println!("{:?}", args);
+    println!("Win!");
 }

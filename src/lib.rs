@@ -30,6 +30,25 @@ pub struct Info<'a> {
     pub env_args: Vec<String>,
     pub args: Vec<Arg<'a>>,
 }
+impl<'a> Info<'a> {
+    pub fn get_positional_args(&'a self) -> Vec<&'a Arg<'a>> {
+        self.args.iter().filter(|a| a.position.is_some()).collect()
+    }
+
+    pub fn get_flags(&'a self) -> Vec<&'a Arg<'a>> {
+        self.args
+            .iter()
+            .filter(|a| a.is_value_none() && (a.long.is_some() || a.short.is_some()))
+            .collect()
+    }
+
+    pub fn get_options(&'a self) -> Vec<&'a Arg<'a>> {
+        self.args
+            .iter()
+            .filter(|a| !a.is_value_none() && (a.long.is_some() || a.short.is_some()))
+            .collect()
+    }
+}
 
 pub fn exit_args<E>(info: &Info<'static>, exit: E) -> Option<i32>
 where
@@ -194,7 +213,15 @@ pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<Error> {
         }
     }
 
-    for arg in info.args.iter().filter(|a| a.is_value_required()) {
+    // Validate Position arguments
+    for arg in info.args.iter().filter(|a| a.position.is_some()) {
+        if arg.value.is_empty() {
+            return Some(Error::RequiresPositional(arg.clone()));
+        }
+    }
+
+    // Validate Options that requires value
+    for arg in info.args.iter().filter(|a| a.occurrences > 0) {
         if arg.value.is_empty() {
             return Some(Error::RequiresValue(arg.clone()));
         }

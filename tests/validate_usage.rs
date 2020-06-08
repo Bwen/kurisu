@@ -82,7 +82,7 @@ fn value_required() {
     struct Yargs {
         // If we have a default the value should not generate a usage error
         #[kurisu(default = "something")]
-        aflag: String,
+        a_flag: String,
         #[kurisu(short)]
         short: String,
         long: String,
