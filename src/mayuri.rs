@@ -6,7 +6,7 @@ use textwrap::Wrapper;
 const DESC_SPACER: &str = "  ";
 const ARG_INDENT: &str = "    ";
 
-pub fn print_usage_error<'a, T: Kurisu<'a>>(_kurisu_struct: &T, arg_error: Option<Error>) {
+pub fn print_usage_error<'a, T: Kurisu>(_kurisu_struct: &T, arg_error: Option<Error>) {
     if let Some(error) = arg_error {
         let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
         let exit_code = match error {

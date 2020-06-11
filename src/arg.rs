@@ -10,6 +10,15 @@ use std::fmt::Display;
 
 const TYPES_NO_VALUE: &[&str] = &["bool"];
 
+// TODO: Arg type that can take stdin? < file redirected into?
+// use std::io::{self, stdin, Read};
+//
+// fn main() -> io::Result<()> {
+//     let mut buf = String::new();
+//     stdin().lock().read_to_string(&mut buf)?;
+//     println!("{}", buf);
+//     Ok(())
+// }
 #[derive(Debug, Clone)]
 pub struct Arg<'a> {
     pub name: &'a str,

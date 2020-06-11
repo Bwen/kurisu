@@ -15,7 +15,7 @@ use crate::arg::Error;
 pub use kurisu_derive::*;
 
 /// Hello there... Tuturuuuu ♫
-pub trait Kurisu<'a> {
+pub trait Kurisu {
     fn from_args(env_args: Vec<String>) -> Self;
     fn get_info_instance(env_args: Vec<String>) -> &'static Mutex<Info<'static>>;
 }
@@ -178,12 +178,12 @@ pub fn parse_value<P: Parser>(name: &str, info: &'_ Info) -> P {
     P::parse(value.as_str())
 }
 
-pub fn valid_exit<'a, T: Kurisu<'a>>(_kurisu_struct: &T) {
+pub fn valid_exit<'a, T: Kurisu>(_kurisu_struct: &T) {
     let arg_error = validate_usage(_kurisu_struct);
     mayuri::print_usage_error(_kurisu_struct, arg_error);
 }
 
-pub fn validate_usage<'a, T: Kurisu<'a>>(_kurisu_struct: &T) -> Option<Error> {
+pub fn validate_usage<'a, T: Kurisu>(_kurisu_struct: &T) -> Option<Error> {
     let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
 
     if info.env_args.is_empty() && !info.allow_noargs {

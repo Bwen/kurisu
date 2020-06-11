@@ -5,6 +5,7 @@ mod extras;
 #[cfg(feature = "parser_extras")]
 pub use extras::*;
 
+use crate::Kurisu;
 use std::path::PathBuf;
 
 pub trait Parser {
@@ -175,5 +176,14 @@ impl Parser for Option<PathBuf> {
         }
 
         Some(PathBuf::from(value))
+    }
+}
+
+impl<T> Parser for Option<T>
+where
+    T: Kurisu,
+{
+    fn parse(value: &str) -> Self {
+        None
     }
 }

@@ -275,5 +275,5 @@ fn positional_missing_value() {
         info.args.iter().find(|a| a.name == "file").unwrap().clone()
     };
 
-    assert_eq!(error.unwrap(), Error::RequiresValue(arg));
+    assert_eq!(error.unwrap(), Error::RequiresPositional(arg));
 }

@@ -261,7 +261,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
     });
 
     let gen = quote! {
-        impl<'a> ::kurisu::Kurisu<'a> for #name {
+        impl ::kurisu::Kurisu for #name {
             fn from_args(env_args: Vec<String>) -> Self {
                 let info = Self::get_info_instance(env_args).lock().unwrap();
                 ::kurisu::exit_args(&info, |code| { std::process::exit(code); });
