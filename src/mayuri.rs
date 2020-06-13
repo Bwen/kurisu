@@ -81,10 +81,7 @@ pub fn print_help(info: &Info) -> i32 {
 
     print_usage(&info);
 
-    let args: Vec<&Arg> = info.get_positional_args();
     let flags: Vec<&Arg> = info.get_flags();
-    let options: Vec<&Arg> = info.get_options();
-
     if !flags.is_empty() {
         println!();
         println!("FLAGS:");
@@ -93,6 +90,7 @@ pub fn print_help(info: &Info) -> i32 {
         }
     }
 
+    let options: Vec<&Arg> = info.get_options();
     if !options.is_empty() {
         println!();
         println!("OPTIONS:");
@@ -101,6 +99,7 @@ pub fn print_help(info: &Info) -> i32 {
         }
     }
 
+    let args: Vec<&Arg> = info.get_positional_args();
     if !args.is_empty() {
         println!();
         println!("ARGS:");
@@ -109,8 +108,14 @@ pub fn print_help(info: &Info) -> i32 {
         }
     }
 
-    // println!();
-    // println!("SUBCOMMANDS:");
+    let subcommands: Vec<&Arg> = info.get_subcommands();
+    if !subcommands.is_empty() {
+        println!();
+        println!("SUBCOMMANDS:");
+        for line in get_arg_usage_lines(subcommands, TERM_WIDTH) {
+            println!("{}", line);
+        }
+    }
 
     if let Some(doc) = info.doc {
         println!();
