@@ -133,8 +133,12 @@ pub struct Info<'a> {
     pub args: Vec<Arg<'a>>,
 }
 impl<'a> Info<'a> {
+    pub fn get_subcommands(&'a self) -> Vec<&'a Arg<'a>> {
+        self.args.iter().filter(|a| a.is_subcommand).collect()
+    }
+
     pub fn get_positional_args(&'a self) -> Vec<&'a Arg<'a>> {
-        self.args.iter().filter(|a| a.position.is_some()).collect()
+        self.args.iter().filter(|a| a.position.is_some() && !a.is_subcommand).collect()
     }
 
     pub fn get_flags(&'a self) -> Vec<&'a Arg<'a>> {
@@ -156,6 +160,12 @@ pub fn exit_args<E>(info: &Info<'static>, exit: E) -> Option<i32>
 where
     E: FnOnce(i32) -> Option<i32>,
 {
+    // If we have at least one subcommand present we skip the exit args and let the subcommand handle it.
+    let subcommands: Vec<&Arg<'_>> = info.args.iter().filter(|a| a.is_subcommand && a.occurrences > 0).collect();
+    if !subcommands.is_empty() {
+        return None;
+    }
+
     let exit_args: Vec<&Arg<'_>> = info
         .args
         .iter()

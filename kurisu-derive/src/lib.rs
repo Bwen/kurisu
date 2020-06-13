@@ -316,6 +316,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         let ty = &f.ty;
 
         let field_meta_attrs = meta_attributes(&f.attrs);
+        let is_subcommand = meta_value("subcommand", &field_meta_attrs, true).is_some();
         let value_name = meta_value("vname", &field_meta_attrs, true).unwrap_or(quote! {None});
         let field_doc = meta_value("doc", &field_meta_attrs, true).unwrap_or(quote! {None});
         let field_default = meta_value("default", &field_meta_attrs, false).unwrap_or(quote! {""});
@@ -375,6 +376,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                 vname: #value_name,
                 value_type: stringify!(#ty),
                 position: #input_position,
+                is_subcommand: #is_subcommand,
                 short: #field_short,
                 long: #field_long,
                 aliases: vec![#(#aliases),*],
@@ -424,6 +426,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             vname: None,
                             value_type: "bool",
                             position: None,
+                            is_subcommand: false,
                             short: Some("h"),
                             long: Some("help"),
                             aliases: Vec::new(),
@@ -441,6 +444,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             vname: None,
                             value_type: "bool",
                             position: None,
+                            is_subcommand: false,
                             short: Some("V"),
                             long: Some("version"),
                             aliases: Vec::new(),

@@ -47,10 +47,7 @@ pub fn parse_bobby(name: &str, info: &'_ Info) -> String {
 }
 
 fn main() {
-    let env_args = std::env::args().skip(1).collect();
-    let args = Yargs {
-        ..Yargs::from_args(env_args)
-    };
+    let args = Yargs::from_args(std::env::args().skip(1).collect());
     kurisu::valid_exit(&args);
 
     // println!("{:?}", args.source_dir.exists());
