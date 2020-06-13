@@ -518,3 +518,27 @@ fn environment_var_fallback_override() {
     let vars: HashMap<String, String> = std::env::vars().collect();
     assert_eq!(yargs.test, *vars.get("MY_ENV_VAR").unwrap());
 }
+
+#[test]
+fn annotation_parser() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(parser = "capitalize")]
+        hello: String,
+        #[kurisu(parser = "capitalize")]
+        test: String,
+    }
+
+    pub fn capitalize(name: &str, info: &'_ Info) -> String {
+        let arg = info.args.iter().find(|a| name == a.name).expect("Infallible");
+        if arg.value.is_empty() {
+            return String::from("");
+        }
+
+        arg.value[0].to_uppercase()
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["--test", "hello"]));
+    assert_eq!(yargs.test, String::from("HELLO"));
+    assert_eq!(yargs.hello, String::from(""));
+}

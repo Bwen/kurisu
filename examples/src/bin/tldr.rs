@@ -27,7 +27,7 @@ struct Yargs {
     #[kurisu(short, nolong, default = "203")]
     /// Blah blah blog
     short: usize,
-    #[kurisu(short)]
+    #[kurisu(short, parser = "parse_bobby")]
     bobby: String,
 }
 
@@ -37,11 +37,23 @@ pub fn my_func() -> i32 {
     ExitCode::OK.into()
 }
 
+pub fn parse_bobby(name: &str, info: &'_ Info) -> String {
+    let arg = info.args.iter().find(|a| name == a.name).expect("Infallible");
+    if arg.value.is_empty() {
+        return String::from("");
+    }
+
+    arg.value[0].to_uppercase()
+}
+
 fn main() {
-    let args = Yargs::from_args(std::env::args().skip(1).collect());
+    let env_args = std::env::args().skip(1).collect();
+    let args = Yargs {
+        ..Yargs::from_args(env_args)
+    };
     kurisu::valid_exit(&args);
 
     // println!("{:?}", args.source_dir.exists());
     // println!("{:?}", args);
-    println!("Win!");
+    println!("Win: {:?}", args.bobby);
 }

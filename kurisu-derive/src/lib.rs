@@ -257,7 +257,16 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
     // TODO: Implement the possibility to skip a struct field by prefixing it with _, Should not generate an Arg and should set default value to struct
     let struct_values = fields.named.iter().map(|f| {
         let name = &f.ident.clone().unwrap();
-        quote_spanned! (name.span() => #name: ::kurisu::parse_value(stringify!(#name), &info),)
+
+        let field_meta_attrs = meta_attributes(&f.attrs);
+        let field_parser = meta_value("parser", &field_meta_attrs, false);
+        if let Some(cb) = field_parser {
+            let func_name = cb.to_string();
+            let ident = syn::Ident::new(&func_name.trim_matches('"'), cb.span());
+            quote_spanned! (name.span() => #name: #ident(stringify!(#name), &info),)
+        } else {
+            quote_spanned! (name.span() => #name: ::kurisu::parse_value(stringify!(#name), &info),)
+        }
     });
 
     let gen = quote! {

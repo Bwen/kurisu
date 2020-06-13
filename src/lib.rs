@@ -172,19 +172,19 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
 }
 
 pub fn parse_value<P: Parser>(name: &str, info: &'_ Info) -> P {
-    // TODO: user parsing if arg type is `fn()` how to call its function, kurisu doc should specify which function to call...
     let arg = info.args.iter().find(|a| name == a.name).expect("Infallible");
     let value = arg.value.join(VALUE_SEPARATOR);
     P::parse(value.as_str())
 }
 
-pub fn valid_exit<'a, T: Kurisu>(_kurisu_struct: &T) {
+pub fn valid_exit<T: Kurisu>(_kurisu_struct: &T) {
     let arg_error = validate_usage(_kurisu_struct);
     mayuri::print_usage_error(_kurisu_struct, arg_error);
 }
 
-pub fn validate_usage<'a, T: Kurisu>(_kurisu_struct: &T) -> Option<Error> {
-    let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
+pub fn validate_usage<T: Kurisu>(_kurisu_struct: &T) -> Option<Error> {
+    // The info instance should always be initialized before validate is called, thus we pass an empty vec
+    let info = T::get_info_instance(Vec::new()).lock().unwrap();
 
     if info.env_args.is_empty() && !info.allow_noargs {
         return Some(Error::NoArgs);
