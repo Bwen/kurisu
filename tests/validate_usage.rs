@@ -236,11 +236,11 @@ fn required_if_args() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         #[kurisu(short)]
-        atest: Option<String>,
+        atest: String,
         #[kurisu(short, required_if = "atest")]
-        btest: Option<String>,
+        btest: String,
         #[kurisu(short)]
-        ctest: Option<String>,
+        ctest: String,
     }
 
     let yargs = Yargs::from_args(vec_to_string(vec!["-a=test"]));
@@ -262,7 +262,7 @@ fn positional_missing_value() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
         #[kurisu(pos = 2)]
-        file: PathBuf,
+        my_file: PathBuf,
         #[kurisu(pos = 1)]
         operation: String,
     }
@@ -272,8 +272,9 @@ fn positional_missing_value() {
 
     let arg = {
         let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
-        info.args.iter().find(|a| a.name == "file").unwrap().clone()
+        info.args.iter().find(|a| a.name == "my_file").unwrap().clone()
     };
 
+    assert!(error.is_some(), "Should return an Error::RequiresPositional");
     assert_eq!(error.unwrap(), Error::RequiresPositional(arg));
 }

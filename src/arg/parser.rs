@@ -28,16 +28,6 @@ impl Parser for Vec<String> {
     }
 }
 
-impl Parser for Option<String> {
-    fn parse(value: &str) -> Self {
-        if value.is_empty() || value.eq("None") {
-            return None;
-        }
-
-        Some(value.to_string())
-    }
-}
-
 impl Parser for bool {
     fn parse(value: &str) -> Self {
         value.parse::<bool>().unwrap_or_default()
@@ -66,20 +56,6 @@ impl Parser for Vec<usize> {
     }
 }
 
-impl Parser for Option<usize> {
-    fn parse(value: &str) -> Self {
-        if value.is_empty() {
-            return None;
-        }
-
-        if let Ok(result) = value.parse::<usize>() {
-            return Some(result);
-        }
-
-        None
-    }
-}
-
 impl Parser for isize {
     fn parse(value: &str) -> Self {
         value.parse::<isize>().unwrap_or_default()
@@ -96,20 +72,6 @@ impl Parser for Vec<isize> {
     }
 }
 
-impl Parser for Option<isize> {
-    fn parse(value: &str) -> Self {
-        if value.is_empty() {
-            return None;
-        }
-
-        if let Ok(result) = value.parse::<isize>() {
-            return Some(result);
-        }
-
-        None
-    }
-}
-
 impl Parser for f64 {
     fn parse(value: &str) -> Self {
         value.parse::<f64>().unwrap_or_default()
@@ -123,20 +85,6 @@ impl Parser for Vec<f64> {
         }
 
         value.split(VALUE_SEPARATOR).map(|v| v.parse::<f64>().unwrap_or_default()).collect()
-    }
-}
-
-impl Parser for Option<f64> {
-    fn parse(value: &str) -> Self {
-        if value.is_empty() {
-            return None;
-        }
-
-        if let Ok(result) = value.parse::<f64>() {
-            return Some(result);
-        }
-
-        None
     }
 }
 
@@ -166,24 +114,5 @@ impl Parser for Vec<PathBuf> {
                 PathBuf::from(v)
             })
             .collect()
-    }
-}
-
-impl Parser for Option<PathBuf> {
-    fn parse(value: &str) -> Self {
-        if value.is_empty() || value.eq("None") {
-            return None;
-        }
-
-        Some(PathBuf::from(value))
-    }
-}
-
-impl<T> Parser for Option<T>
-where
-    T: Kurisu,
-{
-    fn parse(value: &str) -> Self {
-        None
     }
 }

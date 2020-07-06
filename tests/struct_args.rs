@@ -411,35 +411,6 @@ fn empty_value_double_quoted() {
 }
 
 #[test]
-fn optional_types() {
-    #[derive(Debug, Kurisu)]
-    struct Yargs {
-        #[kurisu(short)]
-        string_none: Option<String>,
-        string: Option<String>,
-        #[kurisu(short)]
-        pathbuf: Option<PathBuf>,
-        pathbuf_none: Option<PathBuf>,
-        #[kurisu(short)]
-        usize: Option<usize>,
-        usize_none: Option<usize>,
-        #[kurisu(short)]
-        isize: Option<isize>,
-        isize_none: Option<isize>,
-    }
-
-    let yargs = Yargs::from_args(vec_to_string(vec!["--string=some string", "-p=some path", "-u=42", "-i=-42"]));
-    assert_eq!(yargs.string_none, None);
-    assert_eq!(yargs.string, Some(String::from("some string")));
-    assert_eq!(yargs.pathbuf, Some(PathBuf::from_str("some path").unwrap()));
-    assert_eq!(yargs.pathbuf_none, None);
-    assert_eq!(yargs.usize, Some(42));
-    assert_eq!(yargs.usize_none, None);
-    assert_eq!(yargs.isize, Some(-42));
-    assert_eq!(yargs.isize_none, None);
-}
-
-#[test]
 fn occurrences() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
@@ -523,9 +494,9 @@ fn environment_var_fallback_override() {
 fn annotation_parser() {
     #[derive(Debug, Kurisu)]
     struct Yargs {
-        #[kurisu(parser = "capitalize")]
+        #[kurisu(parse_with = "capitalize")]
         hello: String,
-        #[kurisu(parser = "capitalize")]
+        #[kurisu(parse_with = "capitalize")]
         test: String,
     }
 

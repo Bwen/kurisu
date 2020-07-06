@@ -141,7 +141,7 @@ impl<'a> Arg<'a> {
     }
 
     pub fn is_value_required(&self) -> bool {
-        self.default.is_empty() && !TYPES_NO_VALUE.contains(&self.value_type) && !self.value_type.starts_with("Option")
+        self.default.is_empty() && !TYPES_NO_VALUE.contains(&self.value_type)
     }
 
     pub fn is_value_multiple(&self) -> bool {
