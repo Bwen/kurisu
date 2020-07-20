@@ -232,7 +232,7 @@ fn sanitize_option_short(
 
     let mut short_string = short.to_string();
     if short_string.starts_with("Some") {
-        let short_letter: String = short_string.drain(7..8).collect();
+        let short_letter: String = short_string.drain(6..7).collect();
         if existing_shorts.contains(&short_letter) {
             return syn::Error::new(field.span(), format!("Short flag -{} already bound to another field", short_letter)).to_compile_error();
         }
@@ -361,6 +361,14 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
             exit_cb = quote! {Some(#ident)}
         }
 
+        let field_aliases = meta_value("aliases", &field_meta_attrs, false).unwrap_or(quote! {});
+        let aliases = field_aliases
+            .to_string()
+            .split(',')
+            .map(|a| a.trim())
+            .map(|a| a.replace('"', ""))
+            .collect::<Vec<String>>();
+
         quote_spanned! (name.span() => {
             ::kurisu::Arg {
                 name: stringify!(#name),
@@ -369,6 +377,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                 position: #input_position,
                 short: #field_short,
                 long: #field_long,
+                aliases: vec![#(#aliases),*],
                 doc: #field_doc,
                 exit: #exit_cb,
                 env: #env,
@@ -417,6 +426,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             position: None,
                             short: Some("h"),
                             long: Some("help"),
+                            aliases: Vec::new(),
                             doc: Some("Prints this message"),
                             exit: None,
                             env: None,
@@ -433,6 +443,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                             position: None,
                             short: Some("V"),
                             long: Some("version"),
+                            aliases: Vec::new(),
                             doc: Some("Prints version information"),
                             exit: None,
                             env: None,

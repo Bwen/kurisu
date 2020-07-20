@@ -1,5 +1,6 @@
 use crate::arg::Error;
 use crate::{Arg, ExitCode, Info, Kurisu};
+use std::cmp::Ordering;
 use textwrap::Wrapper;
 
 // TODO: Add test for display layer...
@@ -70,11 +71,12 @@ pub fn print_version(info: &Info) -> i32 {
 }
 
 pub fn print_help(info: &Info) -> i32 {
-    const TERM_WIDTH: usize = 70;
+    let terminal_width = Wrapper::with_termwidth().width;
+
     let bin_name = info.name.unwrap_or("unknown");
     println!("{} {}", bin_name, info.version.unwrap_or("0"));
     if let Some(desc) = info.desc {
-        println!("{}", textwrap::fill(desc, TERM_WIDTH));
+        println!("{}", textwrap::fill(desc, terminal_width));
     }
 
     print_usage(&info);
@@ -86,7 +88,7 @@ pub fn print_help(info: &Info) -> i32 {
     if !flags.is_empty() {
         println!();
         println!("FLAGS:");
-        for line in get_arg_usage_lines(flags, TERM_WIDTH) {
+        for line in get_arg_usage_lines(flags, terminal_width) {
             println!("{}", line);
         }
     }
@@ -94,7 +96,7 @@ pub fn print_help(info: &Info) -> i32 {
     if !options.is_empty() {
         println!();
         println!("OPTIONS:");
-        for line in get_arg_usage_lines(options, TERM_WIDTH) {
+        for line in get_arg_usage_lines(options, terminal_width) {
             println!("{}", line);
         }
     }
@@ -102,7 +104,7 @@ pub fn print_help(info: &Info) -> i32 {
     if !args.is_empty() {
         println!();
         println!("ARGS:");
-        for line in get_arg_usage_lines(args, TERM_WIDTH) {
+        for line in get_arg_usage_lines(args, terminal_width) {
             println!("{}", line);
         }
     }
@@ -113,7 +115,7 @@ pub fn print_help(info: &Info) -> i32 {
     if let Some(doc) = info.doc {
         println!();
         println!("DISCUSSION:");
-        let wrapper = Wrapper::new(TERM_WIDTH).initial_indent(ARG_INDENT).subsequent_indent(ARG_INDENT);
+        let wrapper = Wrapper::new(terminal_width).initial_indent(ARG_INDENT).subsequent_indent(ARG_INDENT);
         println!("{}", wrapper.wrap(doc).join("\n"));
     }
 
@@ -145,7 +147,14 @@ fn print_usage(info: &Info) {
             }
         }
 
-        position_args.sort_by(|a, b| a.0.cmp(&b.0));
+        position_args.sort_by(|a, b| {
+            // Infinite argument always goes last
+            if a.0 == 0 {
+                return Ordering::Greater;
+            }
+
+            a.0.cmp(&b.0)
+        });
         let ordered_args: Vec<&str> = position_args.iter().map(|a| a.1.trim().as_ref()).collect();
         format!(" {}", ordered_args.join(" "))
     } else {

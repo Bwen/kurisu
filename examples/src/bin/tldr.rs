@@ -32,7 +32,7 @@ struct Yargs {
 }
 
 pub fn my_func() -> i32 {
-    println!("I AM exiting DA SHIAT OUTTA THIS NIGGA!");
+    println!("I AM exiting early, thx!");
 
     ExitCode::OK.into()
 }

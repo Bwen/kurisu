@@ -119,6 +119,21 @@ fn value_required_vs_occurrence() {
 }
 
 #[test]
+fn aliases() {
+    #[derive(Debug, Kurisu)]
+    struct Yargs {
+        #[kurisu(aliases = "my-alias")]
+        aliases: bool,
+        #[kurisu(short, aliases = "alias,f")]
+        multiple: bool,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["--my-alias", "--alias", "-f", "-m"]));
+    let error = kurisu::validate_usage(&yargs);
+    assert_eq!(error, None);
+}
+
+#[test]
 fn invalid_short() {
     #[derive(Debug, Kurisu)]
     struct Yargs {

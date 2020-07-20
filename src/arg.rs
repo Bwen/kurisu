@@ -28,6 +28,7 @@ pub struct Arg<'a> {
     pub doc: Option<&'a str>,
     pub short: Option<&'a str>,
     pub long: Option<&'a str>,
+    pub aliases: Vec<&'a str>,
     pub exit: Option<fn() -> i32>,
     pub env: Option<&'a str>,
     pub env_prefix: Option<&'a str>,
@@ -47,6 +48,7 @@ impl<'a> Default for Arg<'a> {
             doc: None,
             short: None,
             long: None,
+            aliases: Vec::new(),
             exit: None,
             env: None,
             env_prefix: None,
@@ -60,14 +62,26 @@ impl<'a> Default for Arg<'a> {
 
 impl<'a> Display for Arg<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut short = String::from("  ");
+        let mut short = String::from("   ");
         if let Some(s) = self.short {
-            short = format!("-{}", s);
+            let mut aliases = String::from("");
+            if !self.aliases.is_empty() {
+                for alias in self.aliases.iter().filter(|a| a.len() == 1) {
+                    aliases = format!("{} -{}", aliases, alias);
+                }
+            }
+            short = format!(" -{}{}", s, aliases);
         }
 
         let mut long = String::from("");
         if let Some(l) = self.long {
-            long = format!(" --{}", l);
+            let mut aliases = String::from("");
+            if !self.aliases.is_empty() {
+                for alias in self.aliases.iter().filter(|a| a.len() > 1) {
+                    aliases = format!("{} --{}", aliases, alias);
+                }
+            }
+            long = format!(" --{}{}", l, aliases);
         }
 
         let multiple = if self.is_value_multiple() { "..." } else { "" };
@@ -108,14 +122,14 @@ impl<'a> PartialEq<Arg<'a>> for Arg<'a> {
 
 impl<'a> PartialOrd for Arg<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.get_first_letter().cmp(&other.get_first_letter()))
+        Some(self.get_compare_string().cmp(&other.get_compare_string()))
     }
 }
 
 impl<'a> Arg<'a> {
-    fn get_first_letter(&self) -> &'a str {
+    fn get_compare_string(&self) -> &'a str {
         if let Some(long) = self.long {
-            &long[0..1]
+            long
         } else if let Some(short) = self.short {
             short
         } else {
@@ -130,10 +144,24 @@ impl<'a> Arg<'a> {
         }
 
         if value.starts_with("--") && self.long.is_some() {
+            if !self.aliases.is_empty() {
+                for alias in self.aliases.iter().filter(|a| a.len() > 1) {
+                    if value.starts_with(&format!("--{}", alias)) {
+                        return true;
+                    }
+                }
+            }
             return value.starts_with(&format!("--{}", self.long.expect("Infallible")));
         }
 
         if value.starts_with('-') && self.short.is_some() {
+            if !self.aliases.is_empty() {
+                for alias in self.aliases.iter().filter(|a| a.len() == 1) {
+                    if value.starts_with(&format!("-{}", alias)) {
+                        return true;
+                    }
+                }
+            }
             return value.starts_with(&format!("-{}", self.short.expect("Infallible")));
         }
 
