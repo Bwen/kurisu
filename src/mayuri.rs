@@ -112,7 +112,7 @@ pub fn print_help(info: &Info) -> i32 {
     if !subcommands.is_empty() {
         println!();
         println!("SUBCOMMANDS:");
-        for line in get_arg_usage_lines(subcommands, TERM_WIDTH) {
+        for line in get_arg_usage_lines(subcommands, terminal_width) {
             println!("{}", line);
         }
     }

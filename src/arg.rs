@@ -89,7 +89,11 @@ impl<'a> Display for Arg<'a> {
         let multiple = if self.is_value_multiple() { "..." } else { "" };
         let value = if !self.is_value_none() {
             let value_name = if self.vname.is_some() { self.vname.unwrap() } else { self.name };
-            format!(" <{}>{}", value_name.to_uppercase(), multiple)
+            if self.is_subcommand {
+                value_name.to_string()
+            } else {
+                format!(" <{}>{}", value_name.to_uppercase(), multiple)
+            }
         } else {
             String::from("")
         };

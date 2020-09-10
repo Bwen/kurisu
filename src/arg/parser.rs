@@ -116,3 +116,9 @@ impl Parser for Vec<PathBuf> {
             .collect()
     }
 }
+
+impl<T> Parser for Option<T> {
+    fn parse(value: &str) -> Self {
+        None
+    }
+}
