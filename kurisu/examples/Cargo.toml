@@ -1,7 +1,7 @@
 [package]
 name = "tuturu"
 version = "0.1.0"
-authors = ["Philippe Guilbault <pguilbault@smartnewb.com>"]
+authors = ["Philippe Guilbault <pguilbault@proton.me>"]
 edition = "2018"
 
 [dependencies]

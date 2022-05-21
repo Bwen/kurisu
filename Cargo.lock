@@ -197,13 +197,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tuturu"
-version = "0.1.0"
-dependencies = [
- "kurisu",
-]
-
-[[package]]
 name = "unicode-bidi"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

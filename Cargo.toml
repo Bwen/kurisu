@@ -2,7 +2,6 @@
 members = [
     "kurisu",
     "kurisu-derive",
-    "kurisu/examples",
 ]
 
 default-members = [
