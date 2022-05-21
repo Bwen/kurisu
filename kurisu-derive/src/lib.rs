@@ -17,7 +17,7 @@
 //!
 //! fn main() {
 //!     let env_vars: Vec<String> = std::env::args().skip(1).collect();
-//!     # let env_vars: Vec<String> = vec!["--knots 8".to_string()];
+//!#     let env_vars: Vec<String> = vec!["--knots 8".to_string()];
 //!
 //!     // The Derive Macro add `from_args` function to the user's struct,
 //!     // `from_args` will normalize the command line values into kurisu::Info.env_args
@@ -144,7 +144,7 @@ fn get_fields_named(data: &syn::Data) -> &syn::FieldsNamed {
         syn::Data::Struct(syn::DataStruct {
             fields: syn::Fields::Named(ref fields),
             ..
-        }) => &fields,
+        }) => fields,
         _ => abort_call_site!("kurisu macro only supports non-tuple structs"),
     }
 }
@@ -154,11 +154,9 @@ fn meta_attributes(attrs: &[Attribute]) -> Vec<(proc_macro2::Ident, Option<syn::
     let mut attributes: Vec<(proc_macro2::Ident, Option<syn::Lit>)> = Vec::new();
     for attr in attrs.iter() {
         if attr.path.is_ident("doc") {
-            if let Ok(meta) = attr.parse_meta() {
-                if let syn::Meta::NameValue(syn::MetaNameValue { ref lit, .. }) = meta {
-                    let doc = quote! {#lit}.to_string().replace('"', "");
-                    doc_lines.push(doc.trim().to_string());
-                }
+            if let Ok(syn::Meta::NameValue(syn::MetaNameValue { ref lit, .. })) = attr.parse_meta() {
+                let doc = quote! {#lit}.to_string().replace('"', "");
+                doc_lines.push(doc.trim().to_string());
             }
 
             continue;
@@ -323,7 +321,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         let env_prefix = meta_value("env_prefix", &field_meta_attrs, true).unwrap_or(quote! {None});
         let env = meta_value("env", &field_meta_attrs, true).unwrap_or(quote! {None});
         let mut field_short = meta_value("short", &field_meta_attrs, true).unwrap_or(quote! {None});
-        let mut field_long = meta_value("long", &field_meta_attrs, true).unwrap_or(quote! {});
+        let mut field_long = meta_value("long", &field_meta_attrs, true).unwrap_or_default();
         let field_input = meta_value("pos", &field_meta_attrs, false);
         let mut input_position = quote! {None};
         if let Some(position) = field_input {
@@ -357,11 +355,11 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         let field_exit = meta_value("exit", &field_meta_attrs, false);
         if let Some(cb) = field_exit {
             let func_name = cb.to_string();
-            let ident = syn::Ident::new(&func_name.trim_matches('"'), cb.span());
+            let ident = syn::Ident::new(func_name.trim_matches('"'), cb.span());
             exit_cb = quote! {Some(#ident)}
         }
 
-        let field_aliases = meta_value("aliases", &field_meta_attrs, false).unwrap_or(quote! {});
+        let field_aliases = meta_value("aliases", &field_meta_attrs, false).unwrap_or_default();
         let aliases = field_aliases
             .to_string()
             .split(',')
@@ -398,7 +396,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
         let field_parser = meta_value("parse_with", &field_meta_attrs, false);
         if let Some(cb) = field_parser {
             let func_name = cb.to_string();
-            let ident = syn::Ident::new(&func_name.trim_matches('"'), cb.span());
+            let ident = syn::Ident::new(func_name.trim_matches('"'), cb.span());
             quote_spanned! (name.span() => #name: #ident(stringify!(#name), &info),)
         } else {
             quote_spanned! (name.span() => #name: ::kurisu::parse_value(stringify!(#name), &info),)
@@ -464,7 +462,7 @@ fn impl_kurisu_macro(ast: &syn::DeriveInput) -> TokenStream {
                         .collect();
 
                     for arg in kurisu_args.iter_mut() {
-                        arg.set_value(&mut env_args, &positions);
+                        arg.set_value(&env_args, &positions);
                     }
 
                     // Sort args for Display usage

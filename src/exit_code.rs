@@ -44,9 +44,9 @@ pub enum ExitCode {
     CONFIG,
 }
 
-impl Into<i32> for ExitCode {
-    fn into(self) -> i32 {
-        match self {
+impl From<ExitCode> for i32 {
+    fn from(code: ExitCode) -> i32 {
+        match code {
             ExitCode::OK => 0,
             ExitCode::FAILURE => 1,
             ExitCode::USAGE => 64,

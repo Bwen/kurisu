@@ -1,6 +1,12 @@
 #!/bin/sh
 
+cargo install cargo-audit cargo-readme
+
 cargo test --no-fail-fast
 cargo check
 cargo fmt --all
 cargo clippy --all-targets
+cargo audit
+
+cargo readme -i src/lib.rs -o README.md
+cargo readme -r kurisu-derive -i src/lib.rs -o README.md

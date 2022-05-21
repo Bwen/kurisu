@@ -1,0 +1,38 @@
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+name: CI Coverage
+
+jobs:
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --no-fail-fast
+        env:
+          CARGO_INCREMENTAL: '0'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off'
+          RUSTDOCFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=1 -Cinline-threshold=0 -Clink-dead-code -Coverflow-checks=off'
+
+      - uses: actions-rs/grcov@v0.1
+        with:
+          config: grcov.yml
+
+      - name: Publish code coverage to Code Climate
+        uses: paambaati/codeclimate-action@v2.7.5
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        with:
+          coverageLocations: |
+            ${{github.workspace}}/*.lcov:lcov

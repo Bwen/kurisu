@@ -17,7 +17,6 @@ use std::path::PathBuf;
 /// Report bugs to: bug-grep@gnu.org
 /// GNU grep home page: <http://www.gnu.org/software/grep/>
 /// General help using GNU software: <http://www.gnu.org/gethelp/>
-// TODO: Add feature to change --test <VALUE> to --test=VALUE ?
 struct Grep {
     #[kurisu(pos = 1, doc = "PATTERN is, by default, a basic regular expression (BRE).")]
     pattern: String,

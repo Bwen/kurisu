@@ -19,7 +19,7 @@ const TYPES_NO_VALUE: &[&str] = &["bool"];
 //     println!("{}", buf);
 //     Ok(())
 // }
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Arg<'a> {
     pub name: &'a str,
     pub vname: Option<&'a str>,
@@ -36,28 +36,6 @@ pub struct Arg<'a> {
     pub default: &'a str,
     pub value: Vec<String>,
     pub occurrences: usize,
-}
-
-impl<'a> Default for Arg<'a> {
-    fn default() -> Arg<'a> {
-        Arg {
-            name: "",
-            vname: None,
-            value_type: "",
-            position: None,
-            doc: None,
-            short: None,
-            long: None,
-            aliases: Vec::new(),
-            exit: None,
-            env: None,
-            env_prefix: None,
-            required_if: None,
-            default: "",
-            value: Vec::new(),
-            occurrences: 0,
-        }
-    }
 }
 
 impl<'a> Display for Arg<'a> {
@@ -122,7 +100,7 @@ impl<'a> PartialEq<Arg<'a>> for Arg<'a> {
 
 impl<'a> PartialOrd for Arg<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.get_compare_string().cmp(&other.get_compare_string()))
+        Some(self.get_compare_string().cmp(other.get_compare_string()))
     }
 }
 

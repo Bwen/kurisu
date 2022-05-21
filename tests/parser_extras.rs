@@ -20,7 +20,7 @@ fn vec_to_string(args: Vec<&str>) -> Vec<String> {
 #[cfg(feature = "parser_extras")]
 #[test]
 fn default_mandatory_values() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         ip: IpAddr,
         url: Url,
@@ -42,7 +42,7 @@ fn default_mandatory_values() {
 #[cfg(feature = "parser_extras")]
 #[test]
 fn values() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         ipv4: IpAddr,
         ipv6: IpAddr,
