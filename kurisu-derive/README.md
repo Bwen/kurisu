@@ -1,7 +1,9 @@
 ![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/5229e3c18baf27989c95/test_coverage)](https://codeclimate.com/github/Bwen/kurisu/test_coverage)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
+
 
 # kurisu-derive
-
 Provides `derive(Kurisu)` for the [Kurisu](../kurisu/index.html) crate.
 
 The Kurisu derive macro is not meant to do any validation nor display usage for the command line

@@ -8,5 +8,5 @@ cargo fmt --all
 cargo clippy --all-targets
 cargo audit
 
-cargo readme -r kurisu -i src/lib.rs -o README.md
-cargo readme -r kurisu-derive -i src/lib.rs -o README.md
+cargo readme -t ../README.tpl -r kurisu -i src/lib.rs -o README.md
+cargo readme -t ../README.tpl -r kurisu-derive -i src/lib.rs -o README.md
