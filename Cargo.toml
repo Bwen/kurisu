@@ -1,6 +1,6 @@
 [package]
 name = "kurisu"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Philippe Guilbault <pguilbault@proton.me>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -20,7 +20,7 @@ bench = false
 path = "src/lib.rs"
 
 [dependencies]
-kurisu-derive = { version = "=0.1.0", path = "kurisu-derive" }
+kurisu-derive = { version = "=0.1.1", path = "kurisu-derive" }
 once_cell = "1.11"
 textwrap = { version = "0.12", features = ["terminal_size"] }
 url = { version = "2.2", optional = true }
