@@ -1,7 +1,7 @@
 ![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/5229e3c18baf27989c95/test_coverage)](https://codeclimate.com/github/Bwen/kurisu/test_coverage)
 
 # kurisu
+
 Command line arguments parser through custom derive macro
 
 For full documentation on `derive(Kurisu)`, please see [kurisu_derive](../kurisu_derive/index.html).

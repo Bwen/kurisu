@@ -46,7 +46,14 @@ jobs:
           cd kurisu-derive
           cargo publish --token ${CARGO_REGISTRY_TOKEN}
 
+      - name: Sleep for 15 seconds
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '15s'
+
       - name: Cargo Kurisu Publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --token ${CARGO_REGISTRY_TOKEN}
+        run: |
+          cd kurisu
+          cargo publish --token ${CARGO_REGISTRY_TOKEN}
