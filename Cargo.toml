@@ -20,7 +20,7 @@ bench = false
 path = "src/lib.rs"
 
 [dependencies]
-kurisu-derive = { path = "kurisu-derive" }
+kurisu-derive = { version = "=0.1.0", path = "kurisu-derive" }
 once_cell = "1.11"
 textwrap = { version = "0.12", features = ["terminal_size"] }
 url = { version = "2.2", optional = true }
