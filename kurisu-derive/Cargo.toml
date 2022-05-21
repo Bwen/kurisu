@@ -1,11 +1,11 @@
 [package]
 name = "kurisu-derive"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Philippe Guilbault <pguilbault@proton.me>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 categories = ["command-line-interface"]
-keywords = ["arg", "argument", "flag", "option", "cli", "parse", "annotation", "getopts"]
+keywords = ["argument", "flag", "option", "cli", "parse"]
 description = "Small idiomatic command line options parser"
 documentation = "https://docs.rs/kurisu-derive/"
 homepage = "https://github.com/Bwen/kurisu/kurisu-derive"
