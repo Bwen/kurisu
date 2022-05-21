@@ -1,5 +1,7 @@
-# kurisu
+![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/5229e3c18baf27989c95/test_coverage)](https://codeclimate.com/github/Bwen/kurisu/test_coverage)
 
+# kurisu
 Command line arguments parser through custom derive macro
 
 For full documentation on `derive(Kurisu)`, please see [kurisu_derive](../kurisu_derive/index.html).
@@ -16,7 +18,6 @@ struct Yargs {
 
 fn main() {
     let env_vars: Vec<String> = std::env::args().skip(1).collect();
-    # let env_vars: Vec<String> = vec!["--knots=8".to_string()];
 
     // Will take the string values from the command line and try to parse them and assign
     // them to the struct's field. If the flag or option is not present then

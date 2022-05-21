@@ -13,7 +13,7 @@ fn vec_to_string(args: Vec<&str>) -> Vec<String> {
 
 #[test]
 fn no_args() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -23,11 +23,13 @@ fn no_args() {
     let yargs = Yargs::from_args(Vec::new());
     let error = kurisu::validate_usage(&yargs);
     assert_eq!(error.unwrap(), Error::NoArgs);
+    assert_eq!(yargs.short, String::default());
+    assert_eq!(yargs.long, String::default());
 }
 
 #[test]
 fn exit_arg_version() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {}
 
     let info = Yargs::get_info_instance(vec_to_string(vec!["--version"])).lock().unwrap();
@@ -37,7 +39,7 @@ fn exit_arg_version() {
 
 #[test]
 fn exit_arg_help() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {}
 
     let info = Yargs::get_info_instance(vec_to_string(vec!["--help"])).lock().unwrap();
@@ -51,7 +53,8 @@ fn exit_arg_custom() {
         ExitCode::NOINPUT.into()
     }
 
-    #[derive(Debug, Kurisu)]
+    #[allow(dead_code)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(exit = "exit_func")]
         exit_plz: bool,
@@ -64,7 +67,7 @@ fn exit_arg_custom() {
 
 #[test]
 fn value_empty() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -74,11 +77,13 @@ fn value_empty() {
     let yargs = Yargs::from_args(vec_to_string(vec!["-s", "", "--long", ""]));
     let error = kurisu::validate_usage(&yargs);
     assert!(error.is_none());
+    assert_eq!(yargs.short, String::default());
+    assert_eq!(yargs.long, String::default());
 }
 
 #[test]
 fn value_required() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         // If we have a default the value should not generate a usage error
         #[kurisu(default = "something")]
@@ -97,11 +102,14 @@ fn value_required() {
     let error = kurisu::validate_usage(&yargs);
     assert!(error.is_some(), "We should get an Error::RequiresValue");
     assert_eq!(error.unwrap(), Error::RequiresValue(long));
+    assert_eq!(yargs.short, String::default());
+    assert_eq!(yargs.long, String::default());
+    assert_eq!(yargs.a_flag, String::from("something"));
 }
 
 #[test]
 fn value_required_vs_occurrence() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short, nolong)]
         short: usize,
@@ -116,11 +124,12 @@ fn value_required_vs_occurrence() {
     let error = kurisu::validate_usage(&yargs);
     assert!(error.is_some(), "We should get an Error::RequiresValue");
     assert_eq!(error.unwrap(), Error::RequiresValue(short));
+    assert_eq!(yargs.short, usize::default());
 }
 
 #[test]
 fn aliases() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(aliases = "my-alias")]
         aliases: bool,
@@ -131,11 +140,13 @@ fn aliases() {
     let yargs = Yargs::from_args(vec_to_string(vec!["--my-alias", "--alias", "-f", "-m"]));
     let error = kurisu::validate_usage(&yargs);
     assert_eq!(error, None);
+    assert!(yargs.aliases);
+    assert!(!yargs.multiple); // TODO: Test aliases, shouldn't this be true?
 }
 
 #[test]
 fn invalid_short() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -145,11 +156,13 @@ fn invalid_short() {
     let yargs = Yargs::from_args(vec_to_string(vec!["-s", "test1", "--long", "test2", "-k"]));
     let error = kurisu::validate_usage(&yargs);
     assert_eq!(error.unwrap(), Error::Invalid(String::from("-k")));
+    assert_eq!(yargs.short, String::from("test1"));
+    assert_eq!(yargs.long, String::from("test2"));
 }
 
 #[test]
 fn invalid_long() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -159,11 +172,13 @@ fn invalid_long() {
     let yargs = Yargs::from_args(vec_to_string(vec!["-s", "test1", "--long", "test2", "--test"]));
     let error = kurisu::validate_usage(&yargs);
     assert_eq!(error.unwrap(), Error::Invalid(String::from("--test")));
+    assert_eq!(yargs.short, String::from("test1"));
+    assert_eq!(yargs.long, String::from("test2"));
 }
 
 #[test]
 fn invalid_arg() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -173,11 +188,13 @@ fn invalid_arg() {
     let yargs = Yargs::from_args(vec_to_string(vec!["-s", "test1", "--long", "test2", "test"]));
     let error = kurisu::validate_usage(&yargs);
     assert_eq!(error.unwrap(), Error::Invalid(String::from("test")));
+    assert_eq!(yargs.short, String::from("test1"));
+    assert_eq!(yargs.long, String::from("test2"));
 }
 
 #[test]
 fn invalid_arg_within_args() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -200,11 +217,15 @@ fn invalid_arg_within_args() {
 
     let error = kurisu::validate_usage(&yargs);
     assert_eq!(error.unwrap(), Error::Invalid(String::from("file3.txt")));
+    assert_eq!(yargs.short, String::from("test1"));
+    assert_eq!(yargs.long, String::from("test2"));
+    assert_eq!(yargs.source, String::from("file1.txt"));
+    assert_eq!(yargs.target, String::from("file2.txt"));
 }
 
 #[test]
 fn infinite_pos() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -228,11 +249,17 @@ fn infinite_pos() {
         error.is_none(),
         "Should not Error out, infinite pos should be greedy and absorb all positional args"
     );
+    assert_eq!(yargs.short, String::from("test1"));
+    assert_eq!(yargs.long, String::from("test2"));
+    assert_eq!(
+        yargs.test,
+        vec![String::from("file1.txt"), String::from("file2.txt"), String::from("file3.txt"),]
+    );
 }
 
 #[test]
 fn invalid_arg_last_pos() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -244,11 +271,14 @@ fn invalid_arg_last_pos() {
     let yargs = Yargs::from_args(vec_to_string(vec!["-s", "test1", "file1.txt", "--long", "test2", "file2.txt"]));
     let error = kurisu::validate_usage(&yargs);
     assert_eq!(error.unwrap(), Error::Invalid(String::from("file1.txt")));
+    assert_eq!(yargs.short, String::from("test1"));
+    assert_eq!(yargs.long, String::from("test2"));
+    assert_eq!(yargs.test, String::from("file2.txt"));
 }
 
 #[test]
 fn required_if_args() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         atest: String,
@@ -269,12 +299,15 @@ fn required_if_args() {
         btest = info.args.iter().find(|a| a.name == "btest").unwrap().clone();
     }
 
-    assert_eq!(error.unwrap(), Error::RequiresValueIf(atest, btest));
+    assert_eq!(error.unwrap(), Error::RequiresValueIf(atest, Box::new(btest)));
+    assert_eq!(yargs.atest, String::from("test"));
+    assert_eq!(yargs.btest, String::default());
+    assert_eq!(yargs.ctest, String::default());
 }
 
 #[test]
 fn positional_missing_value() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(pos = 2)]
         my_file: PathBuf,
@@ -292,4 +325,6 @@ fn positional_missing_value() {
 
     assert!(error.is_some(), "Should return an Error::RequiresPositional");
     assert_eq!(error.unwrap(), Error::RequiresPositional(arg));
+    assert_eq!(yargs.my_file, PathBuf::default());
+    assert_eq!(yargs.operation, String::from("delete"));
 }

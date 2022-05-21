@@ -8,5 +8,5 @@ pub enum Error {
     Invalid(String),
     RequiresPositional(Arg<'static>),
     RequiresValue(Arg<'static>),
-    RequiresValueIf(Arg<'static>, Arg<'static>),
+    RequiresValueIf(Arg<'static>, Box<Arg<'static>>),
 }

@@ -18,7 +18,7 @@ fn vec_to_string(args: Vec<&str>) -> Vec<String> {
 
 #[test]
 fn debug_info() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {}
 
     Yargs::from_args(Vec::new());
@@ -29,7 +29,7 @@ fn debug_info() {
 
 #[test]
 fn builtins() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {}
 
     Yargs::from_args(Vec::new());
@@ -51,7 +51,7 @@ fn builtins() {
 
 #[test]
 fn default_long() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short, nolong)]
         short: bool,
@@ -60,7 +60,11 @@ fn default_long() {
         long_arg: bool,
     }
 
-    Yargs::from_args(Vec::new());
+    let yargs = Yargs::from_args(Vec::new());
+    assert!(!yargs.short);
+    assert!(!yargs.more);
+    assert!(!yargs.long_arg);
+
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(5, info.args.len());
 
@@ -82,7 +86,7 @@ fn default_long() {
 
 #[test]
 fn auto_shorts() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     #[kurisu(auto_shorts)]
     struct Yargs {
         short: bool,
@@ -90,7 +94,11 @@ fn auto_shorts() {
         long_arg: bool,
     }
 
-    Yargs::from_args(Vec::new());
+    let yargs = Yargs::from_args(Vec::new());
+    assert!(!yargs.short);
+    assert!(!yargs.more);
+    assert!(!yargs.long_arg);
+
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(5, info.args.len());
 
@@ -112,7 +120,7 @@ fn auto_shorts() {
 
 #[test]
 fn default_mandatory_values() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         string: String,
         path_buf: PathBuf,
@@ -126,6 +134,14 @@ fn default_mandatory_values() {
     }
 
     let yargs = Yargs::from_args(Vec::new());
+    assert_eq!(yargs.string, String::default());
+    assert_eq!(yargs.path_buf, PathBuf::default());
+    assert_eq!(yargs.usize, usize::default());
+    assert_eq!(yargs.isize, isize::default());
+    assert_eq!(yargs.f64, f64::default());
+    assert_eq!(yargs.bool, bool::default());
+    assert_eq!(yargs.default, 42usize);
+
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
     assert_eq!(10, info.args.len());
 
@@ -191,7 +207,7 @@ fn default_mandatory_values() {
 
 #[test]
 fn values() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         string: String,
         path_buf: PathBuf,
@@ -215,13 +231,13 @@ fn values() {
     assert_eq!(yargs.usize, 42);
     assert_eq!(yargs.isize, -42);
     assert!(approx_eq!(f64, yargs.f64, 4.2222, ulps = 2));
-    assert_eq!(yargs.bool, true);
+    assert!(yargs.bool);
     assert_eq!(yargs.path_buf, PathBuf::from_str("/dir/file.txt").unwrap());
 }
 
 #[test]
 fn positional() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(pos = 2)]
         file: PathBuf,
@@ -236,7 +252,7 @@ fn positional() {
 
 #[test]
 fn positional_dash_only() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(pos)]
         dash: String,
@@ -248,7 +264,7 @@ fn positional_dash_only() {
 
 #[test]
 fn only_positional_values_follow() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         zero: bool,
         one: bool,
@@ -261,15 +277,15 @@ fn only_positional_values_follow() {
     let yargs = Yargs::from_args(vec_to_string(vec![
         "--zero", "--", "-t1", "test2", "--test1", "--", "external", "-a", "--test",
     ]));
-    assert_eq!(yargs.zero, true);
-    assert_eq!(yargs.one, false);
+    assert!(yargs.zero);
+    assert!(!yargs.one);
     assert_eq!(yargs.test1, vec_to_string(vec!["-t1", "--test1", "--", "external", "-a", "--test"]));
     assert_eq!(yargs.test2, String::from("test2"));
 }
 
 #[test]
 fn multiple_values() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         string: Vec<String>,
         path_buf: Vec<PathBuf>,
@@ -306,7 +322,7 @@ fn multiple_values() {
 
 #[test]
 fn multiple_comma_values() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         string: Vec<String>,
         path_buf: Vec<PathBuf>,
@@ -344,7 +360,7 @@ fn multiple_comma_values() {
 
 #[test]
 fn positional_infinite() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(pos)]
         files: Vec<String>,
@@ -373,7 +389,7 @@ fn positional_infinite() {
 
 #[test]
 fn positional_infinite_and_last() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(pos)]
         files: Vec<String>,
@@ -398,7 +414,7 @@ fn positional_infinite_and_last() {
 
 #[test]
 fn empty_value_double_quoted() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short)]
         short: String,
@@ -412,7 +428,7 @@ fn empty_value_double_quoted() {
 
 #[test]
 fn occurrences() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short, nolong)]
         verbose: u8,
@@ -424,7 +440,7 @@ fn occurrences() {
 
 #[test]
 fn not_occurrence() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short, nolong)]
         test: u8,
@@ -436,7 +452,7 @@ fn not_occurrence() {
 
 #[test]
 fn short_flag_no_space_value() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(short, nolong)]
         itest: String,
@@ -450,7 +466,7 @@ fn short_flag_no_space_value() {
 fn environment_var_fallback() {
     std::env::set_var("MY_ENV_VAR", "TESTING ENV VARS");
 
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         my_env_var: String,
     }
@@ -464,7 +480,7 @@ fn environment_var_fallback() {
 fn environment_var_fallback_prefix() {
     std::env::set_var("MY_ENV_VAR", "TESTING ENV VARS");
 
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(env_prefix = "MY_")]
         env_var: String,
@@ -479,7 +495,7 @@ fn environment_var_fallback_prefix() {
 fn environment_var_fallback_override() {
     std::env::set_var("MY_ENV_VAR", "TESTING ENV VARS");
 
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(env = "MY_ENV_VAR")]
         test: String,
@@ -492,7 +508,7 @@ fn environment_var_fallback_override() {
 
 #[test]
 fn annotation_parser() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {
         #[kurisu(parse_with = "capitalize")]
         hello: String,

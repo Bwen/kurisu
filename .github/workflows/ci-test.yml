@@ -1,0 +1,24 @@
+on:
+  schedule: [cron: "0 13 * * 1"]
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - master
+
+name: CI OS Tests
+
+jobs:
+  test:
+    name: ${{matrix.os}} Rust ${{matrix.rust}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, beta, nightly, 1.41.0]
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{matrix.rust}}
+      - run: cargo test --no-fail-fast

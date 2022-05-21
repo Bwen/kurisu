@@ -4,8 +4,6 @@ pub const VALUE_SEPARATOR: &str = "(_(__)===D";
 mod extras;
 #[cfg(feature = "parser_extras")]
 pub use extras::*;
-
-use crate::Kurisu;
 use std::path::PathBuf;
 
 pub trait Parser {

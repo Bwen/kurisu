@@ -7,7 +7,7 @@ use textwrap::Wrapper;
 const DESC_SPACER: &str = "  ";
 const ARG_INDENT: &str = "    ";
 
-pub fn print_usage_error<'a, T: Kurisu>(_kurisu_struct: &T, arg_error: Option<Error>) {
+pub fn print_usage_error<T: Kurisu>(_kurisu_struct: &T, arg_error: Option<Error>) {
     if let Some(error) = arg_error {
         let info = T::get_info_instance(std::env::args().skip(1).collect()).lock().unwrap();
         let exit_code = match error {
@@ -25,24 +25,24 @@ pub fn print_usage_error<'a, T: Kurisu>(_kurisu_struct: &T, arg_error: Option<Er
 }
 
 pub fn print_custom_error(text: String, info: &Info) -> i32 {
-    print_error_text(&info, text);
-    print_usage(&info);
+    print_error_text(info, text);
+    print_usage(info);
     print_more_info();
     ExitCode::USAGE.into()
 }
 
 pub fn print_custom_arg_error(arg: Arg, text: String, info: &Info) -> i32 {
     let arg_string = format!("{}", arg);
-    print_error_text(&info, format!("{} {}", arg_string.trim(), text));
-    print_usage(&info);
+    print_error_text(info, format!("{} {}", arg_string.trim(), text));
+    print_usage(info);
     print_more_info();
     ExitCode::USAGE.into()
 }
 
 pub fn print_invalid_arg(arg: String, info: &Info) -> i32 {
     let error = format!("unrecognized option {}", arg);
-    print_error_text(&info, error);
-    print_usage(&info);
+    print_error_text(info, error);
+    print_usage(info);
     print_more_info();
     ExitCode::USAGE.into()
 }
@@ -50,8 +50,8 @@ pub fn print_invalid_arg(arg: String, info: &Info) -> i32 {
 pub fn print_missing_positional(arg: Arg, info: &Info) -> i32 {
     let arg_string = format!("{}", arg);
     let error = format!("missing argument {}", arg_string.trim());
-    print_error_text(&info, error);
-    print_usage(&info);
+    print_error_text(info, error);
+    print_usage(info);
     print_more_info();
     ExitCode::USAGE.into()
 }
@@ -59,8 +59,8 @@ pub fn print_missing_positional(arg: Arg, info: &Info) -> i32 {
 pub fn print_missing_value(arg: Arg, info: &Info) -> i32 {
     let arg_string = format!("{}", arg);
     let error = format!("missing value for option {}", arg_string.trim());
-    print_error_text(&info, error);
-    print_usage(&info);
+    print_error_text(info, error);
+    print_usage(info);
     print_more_info();
     ExitCode::USAGE.into()
 }
@@ -79,7 +79,7 @@ pub fn print_help(info: &Info) -> i32 {
         println!("{}", textwrap::fill(desc, terminal_width));
     }
 
-    print_usage(&info);
+    print_usage(info);
 
     let args: Vec<&Arg> = info.get_positional_args();
     let flags: Vec<&Arg> = info.get_flags();
@@ -155,15 +155,15 @@ fn print_usage(info: &Info) {
 
             a.0.cmp(&b.0)
         });
-        let ordered_args: Vec<&str> = position_args.iter().map(|a| a.1.trim().as_ref()).collect();
+        let ordered_args: Vec<&str> = position_args.iter().map(|a| a.1.trim()).collect();
         format!(" {}", ordered_args.join(" "))
     } else {
         String::from("")
     };
 
-    let all_shorts: Vec<&Arg> = info.args.iter().filter(|a| a.short.is_some()).collect();
+    let all_shorts_len = info.args.iter().filter(|a| a.short.is_some()).count();
     let all_shorts_options: Vec<&Arg> = info.args.iter().filter(|a| a.short.is_some() || a.long.is_some()).collect();
-    let usage_options = if all_shorts.len() == all_shorts_options.len() {
+    let usage_options = if all_shorts_len == all_shorts_options.len() {
         // if we have only shorts we stack them
         let flag_stack: Vec<&str> = all_shorts_options.iter().map(|a| a.short.expect("Infallible")).collect();
         format!(" [-{}]", flag_stack.join(""))
@@ -186,7 +186,7 @@ fn get_arg_usage_lines(args: Vec<&Arg>, term_width: usize) -> Vec<String> {
     let column1_width = args.iter().map(|a| format!("{}{}", ARG_INDENT, a).len()).max_by(|a, b| a.cmp(b)).unwrap();
     for arg in args {
         let doc = if let Some(doc) = arg.doc {
-            doc.replace("\n", " ")
+            doc.replace('\n', " ")
         } else {
             String::from("")
         };
@@ -206,7 +206,7 @@ fn get_arg_usage_lines(args: Vec<&Arg>, term_width: usize) -> Vec<String> {
 
         line = line.trim_matches('\n').to_string();
         if arg.position.is_some() {
-            line = format!("{}{}", ARG_INDENT, line.trim().to_string());
+            line = format!("{}{}", ARG_INDENT, line.trim());
         }
         lines.push(line);
     }

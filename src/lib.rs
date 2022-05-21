@@ -1,3 +1,4 @@
+#![allow(clippy::needless_doctest_main)]
 //! Command line arguments parser through custom derive macro
 //!
 //! For full documentation on `derive(Kurisu)`, please see [kurisu_derive](../kurisu_derive/index.html).
@@ -14,21 +15,21 @@
 //!
 //! fn main() {
 //!     let env_vars: Vec<String> = std::env::args().skip(1).collect();
-//!     # let env_vars: Vec<String> = vec!["--knots=8".to_string()];
+//!#     let env_vars: Vec<String> = vec!["--knots=8".to_string()];
 //!
 //!     // Will take the string values from the command line and try to parse them and assign
 //!     // them to the struct's field. If the flag or option is not present then
 //!     // its default type value will be assigned to the struct's field.
-//!     // In this case: usize::default()  
+//!     // In this case: usize::default()
 //!     let args = Yargs::from_args(env_vars);
-//!     
+//!
 //!     // Returns an Option<kurisu::arg::Error> or None
 //!     let arg_error = kurisu::validate_usage(&args);
 //!
 //!     // If an error is present `print_usage_error` will std::process::exit()
 //!     // with kurisu::ExitCode::USAGE(64) as exit code
 //!     mayuri::print_usage_error(&args, arg_error);
-//!     
+//!
 //!     // Assuming the application was called like so: `mycli --knots 8`
 //!     assert_eq!(args.knots, 8);
 //! }
@@ -168,9 +169,9 @@ where
         }
 
         return if arg.name == "version" {
-            exit(mayuri::print_version(&info))
+            exit(mayuri::print_version(info))
         } else if arg.name == "usage" {
-            exit(mayuri::print_help(&info))
+            exit(mayuri::print_help(info))
         } else {
             exit((arg.exit.expect("Infallible"))())
         };
@@ -180,7 +181,6 @@ where
 }
 
 pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<String> {
-    let known_short_flags: Vec<&str> = kurisu_args.iter().filter_map(|a| a.short).collect();
     let mut env_vars: Vec<String> = Vec::new();
     let mut previous_flag: String = String::from("");
     let mut options_ended = false;
@@ -205,7 +205,7 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
             let mut value = String::from("");
             // Normalize short flag value with no spaces `-iVALUE` as well as stacking short flags
             for short in arg.chars().skip(1) {
-                if !unknown_flag && known_short_flags.contains(&short.to_string().as_str()) {
+                if !unknown_flag && kurisu_args.iter().filter_map(|a| a.short).any(|x| x == short.to_string().as_str()) {
                     arguments.push(format!("-{}", short));
                 } else {
                     unknown_flag = true;
@@ -216,7 +216,6 @@ pub fn normalize_env_args<'a>(args: &[String], kurisu_args: &[Arg<'a>]) -> Vec<S
             if !value.is_empty() {
                 arguments.push(value);
             }
-            //arguments = arg.chars().skip(1).map(|a| format!("-{}", a)).collect()
         }
 
         for arg in arguments {
@@ -292,12 +291,7 @@ pub fn validate_usage<T: Kurisu>(_kurisu_struct: &T) -> Option<Error> {
         return Some(Error::NoArgs);
     }
 
-    let positions: Vec<i8> = info
-        .args
-        .iter()
-        .filter(|a| a.position.is_some())
-        .map(|a| a.position.expect("Infallible"))
-        .collect();
+    let positions: Vec<i8> = info.args.iter().filter_map(|a| a.position).collect();
 
     // Always validate invalid options & args first
     let mut pos: i8 = 0;
@@ -333,7 +327,7 @@ pub fn validate_usage<T: Kurisu>(_kurisu_struct: &T) -> Option<Error> {
         let counter_part = info.args.iter().find(|a| a.name == arg.required_if.expect("Infallible"));
         if let Some(counter_part) = counter_part {
             if counter_part.occurrences > 0 && arg.value.is_empty() {
-                return Some(Error::RequiresValueIf(counter_part.clone(), arg.clone()));
+                return Some(Error::RequiresValueIf(counter_part.clone(), Box::new(arg.clone())));
             }
         }
     }

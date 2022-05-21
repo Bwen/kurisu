@@ -4,7 +4,7 @@ use toml::Value;
 
 #[test]
 fn annotation() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     #[kurisu(name = "yargs", version = "1.0.0", desc = "some desc here")]
     struct Yargs {}
 
@@ -14,12 +14,12 @@ fn annotation() {
     assert_eq!(info.version, Some("1.0.0"));
     assert_eq!(info.desc, Some("some desc here"));
     assert_eq!(info.desc, Some("some desc here"));
-    assert_eq!(info.allow_noargs, false);
+    assert!(!info.allow_noargs);
 }
 
 #[test]
 fn cargo() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     #[kurisu(cargo)]
     struct Yargs {}
 
@@ -35,7 +35,7 @@ fn cargo() {
 
 #[test]
 fn cargo_only_if_no_value() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     #[kurisu(cargo, name = "yargs", version = "1.2.3", desc = "some desc here")]
     struct Yargs {}
 
@@ -49,7 +49,7 @@ fn cargo_only_if_no_value() {
 
 #[test]
 fn doc() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     /// line one
     /// line two
     /// line three
@@ -62,7 +62,7 @@ fn doc() {
 
 #[test]
 fn none() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     struct Yargs {}
 
     Yargs::from_args(Vec::new());
@@ -74,11 +74,11 @@ fn none() {
 
 #[test]
 fn noargs() {
-    #[derive(Debug, Kurisu)]
+    #[derive(Kurisu)]
     #[kurisu(allow_noargs)]
     struct Yargs {}
 
     Yargs::from_args(Vec::new());
     let info = Yargs::get_info_instance(Vec::new()).lock().unwrap();
-    assert_eq!(info.allow_noargs, true);
+    assert!(info.allow_noargs);
 }
