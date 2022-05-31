@@ -6,3 +6,7 @@ edition = "2018"
 
 [dependencies]
 kurisu = {path = "../"}
+
+[[bin]]
+name = "cabi"
+path = "src/bin/cabi.rs"

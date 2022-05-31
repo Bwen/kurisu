@@ -311,7 +311,8 @@ pub fn validate_usage<T: Kurisu>(_kurisu_struct: &T) -> Option<Error> {
 
     // Validate Position arguments
     for arg in info.args.iter().filter(|a| a.position.is_some()) {
-        if arg.value.is_empty() {
+        // Infinite position arguments are optional by design, thus will be an empty vec if no extra arguments
+        if arg.value.is_empty() && arg.position != Some(0) {
             return Some(Error::RequiresPositional(arg.clone()));
         }
     }

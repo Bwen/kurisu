@@ -12,7 +12,7 @@ pub trait Parser {
 
 impl Parser for String {
     fn parse(value: &str) -> Self {
-        value.to_string()
+        value.replace(VALUE_SEPARATOR, " ")
     }
 }
 
