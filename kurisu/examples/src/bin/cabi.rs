@@ -6,7 +6,7 @@ struct Yargs {
     #[kurisu(pos = 1)]
     subcommand: String,
     #[kurisu(pos)]
-    args: Vec<String>,
+    args: String,
 }
 
 fn main() {

@@ -429,6 +429,23 @@ fn positional_infinite_optional() {
 }
 
 #[test]
+fn positional_infinite_string() {
+    #[derive(Kurisu)]
+    struct Yargs {
+        #[kurisu(pos = 1)]
+        subcommand: String,
+        #[kurisu(pos)]
+        args: String,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["dmail", "test1", "test2", "test3"]));
+
+    assert_eq!(yargs.subcommand, String::from("dmail"));
+    assert!(!yargs.args.contains(kurisu::arg::VALUE_SEPARATOR));
+    assert_eq!(yargs.args, String::from("test1 test2 test3"));
+}
+
+#[test]
 fn empty_value_double_quoted() {
     #[derive(Kurisu)]
     struct Yargs {
