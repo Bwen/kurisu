@@ -413,6 +413,22 @@ fn positional_infinite_and_last() {
 }
 
 #[test]
+fn positional_infinite_optional() {
+    #[derive(Kurisu)]
+    struct Yargs {
+        #[kurisu(pos = 1)]
+        subcommand: String,
+        #[kurisu(pos)]
+        args: Vec<String>,
+    }
+
+    let yargs = Yargs::from_args(vec_to_string(vec!["dmail"]));
+
+    assert_eq!(yargs.subcommand, String::from("dmail"));
+    assert!(yargs.args.is_empty());
+}
+
+#[test]
 fn empty_value_double_quoted() {
     #[derive(Kurisu)]
     struct Yargs {

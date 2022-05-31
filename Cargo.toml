@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "kurisu",
+    "kurisu/examples",
     "kurisu-derive",
 ]
 
