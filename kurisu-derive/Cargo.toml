@@ -1,6 +1,6 @@
 [package]
 name = "kurisu-derive"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Philippe Guilbault <pguilbault@proton.me>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
